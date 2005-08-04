@@ -765,21 +765,6 @@ according to Module::Build's version comparison scheme.
 As a work around, we now simply assume that the most recent version on
 CPAN satisfies a dependency.
 
-=item * Module::Build doesn't support 'PREFIX' (#8759)
-
-Module::Build doens't support the standard C<Makefile.PL> argument 
-C<PREFIX> and dies if it is provided. Even though that's not usually a 
-problem, sometimes M::B enabled distros ship a C<Makefile.PL> that 
-calls the C<Build.PL> under the hood. In these cases, a C<PREFIX> might
-be provided and C<Module::Build> will die.
-
-=item * Module::Build masquerades as Makefile.PL but is not compatible (#13145)
-
-Related to the previous entry, C<Module::Build> can create a 
-C<Makefile.PL> which under the hood invokes C<Module::Build>. It however
-does not support all the options that C<ExtUtils::MakeMaker> does, and
-will die if you try to invoke the file with one of those options.
-
 =item * Module::Build can not be upgraded using it's own API (#13169)
 
 This is due to the fact that the Build file insists on adding a path
@@ -798,8 +783,8 @@ like C<testers.cpan.org>.
 
 =head1 AUTHOR
 
-This module by
-Jos Boumans E<lt>kane@cpan.orgE<gt>.
+Originally by Jos Boumans E<lt>kane@cpan.orgE<gt>.  Brought to working
+condition and currently maintained by Ken Williams E<lt>kwilliams@cpan.orgE<gt>.
 
 =head1 COPYRIGHT
 

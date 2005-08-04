@@ -260,26 +260,15 @@ sub prepare {
     #local $ENV{PERL5LIB} = CPANPLUS::inc->original_perl5lib;
     local @INC           = CPANPLUS::inc->original_inc;
 
-    ### but do it *before* the new_from_context, as M::B seems
-    ### to be actually running the file...
-    ### an unshift in the block seems to be ignored.. somehow...
-    #{   my $lib = $self->best_path_to_module_build;
-    #    unshift @INC, $lib if $lib;
-    #}
-    
-    ### we're a seperate release now, so 
-    #unshift @INC, $self->best_path_to_module_build
-    #            if $self->best_path_to_module_build;
-
     ### this will generate warnings under anything lower than M::B 0.2606
     my %buildflags = $dist->_buildflags_as_hash( $buildflags );
     $dist->status->_buildflags( $buildflags );
 
     my $fail;
     RUN: {
-        ### piece of sh*t, stop DYING! --kane
+        # Wrap the exception that may be thrown here (should likely be
+        # done at a much higher level).
         my $mb = eval { Module::Build->new_from_context( %buildflags ) };
-        #my $mb = eval { Module::Build->new_from_context( ) };
         if( !$mb or $@ ) {
             error(loc("Could not create Module::Build object: %1","$@"));
             $fail++; last RUN;
@@ -289,52 +278,34 @@ sub prepare {
 
         ### resolve prereqs ###
         my $prereqs = $dist->_find_prereqs( verbose => $verbose );
+	my %prereqs_out;
 
-        ### XXX mangle prereqs because our uptodate() function can't
-        ### handle M::B version ranges -- perhaps always use M::B to
-        ### verify if modules are up to date, but that would cause a
-        ### dependency
-        ### so for now, always use the most recent version of a module
-        ### if the prereq was somehow unsatisfied
-        my $mangled_prereqs = {};
         for my $mod (keys %$prereqs) {
-            my $modobj = $cb->module_tree($mod);
-            unless( $modobj ) {
-                ### XXX just skip it for now.. not sure if it's the best
-                ### thing to do -- but some times a module (like Config)
-                ### is not in the index, but it's part of core...
-                #error(loc("Unable to find '%1' in the module tree ".
-                #          "-- unable to satisfy prerequisites", $mod));
-                #$fail++; last RUN;
-                next;
-            }
+            # Check whether the installed version (if any) satisfies this
+            # prereq.  If not, check whether the latest CPAN version
+            # satisfies it.  If not, fail.
 
-            ### ok, so there's several ways this can go.. either you don't
-            ### care about the version, then the $mb_version will be 'false'
-            ### otherwise you want 'a' version -- means $mb_version may only
-            ### contain \d. otherwise we don't know what the hell you
-            ### want, and just assume any old version is good enough
-            ### XXX of course, this is not necessarily correct *AT ALL*
-            my $mb_version = $prereqs->{$mod};
-            my $wanted;
+            warn "Checking prereq $mod ($prereqs->{$mod})";
 
-            ### anything will do
-            unless( $mb_version ) {
-                $wanted = 0;
-
-            ### a specific version
-            } elsif ( $mb_version =~ /^[\d.]+$/ ) {
-                $wanted = $mb_version;
-
-            ### eh, some sort of range...??
-            } else {
-                $wanted = 0;
-            }
-
-            $mangled_prereqs->{ $mod } = $wanted;
+            my $status = Module::Build->check_installed_status($mod, $prereqs->{$mod});
+            next if $status->{ok};
+            
+            # XXX get the latest version from the CPAN index and check it
+            no strict 'refs';
+            local ${$mod . '::VERSION'} = get_indexed_version($mod);  # XXX this function doesn't exist
+            my $status = Module::Build->check_installed_status($mod, $prereqs->{$mod});
+	    if ($status->{ok}) {
+		$prereqs_out{$mod} = $status->{have};
+		next;
+	    }
+	    
+            error(loc("This distribution depends on $mod, but the latest version of $mod on CPAN ".
+		      "doesn't satisfy the specific version dependency ($prereqs->{$mod}). ".
+		      "Please try to resolve this dependency manually."));
+            $fail++;
         }
         
-        $self->status->prereqs( $mangled_prereqs );
+        $self->status->prereqs( \%prereqs_out );
     }
     
     ### send out test report? ###

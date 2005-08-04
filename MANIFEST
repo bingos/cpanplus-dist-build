@@ -1,0 +1,15 @@
+lib/CPANPLUS/Dist/Build.pm
+lib/CPANPLUS/Dist/Build/Constants.pm
+Makefile.PL
+MANIFEST			This list of files
+MANIFEST.SKIP
+META.yml
+README
+t/01_CPANPLUS-Dist-Build-Constants.t
+t/02_CPANPLUS-Dist-Build.t
+t/dummy-perl/.hidden
+t/dummy-perl/lib/.hidden
+t/dummy-perl/man/man1/.hidden
+t/dummy-perl/man/man3/.hidden
+t/src/noxs/Foo-Bar-0.01.tar.gz
+t/src/xs/Foo-Bar-0.01.tar.gz

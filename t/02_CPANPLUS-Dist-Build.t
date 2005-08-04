@@ -134,14 +134,13 @@ while( my($path,$need_cc) = each %Map ) {
                                 "Installing module" ); 
             ok( $mod->status->installed,    
                                 "   Status says module installed" );
-
         }
 
         SKIP: {
-            skip(q[Can't uninstall: Module::Build writes no .packlist], 1);
-        
-            ### XXX M::B doesn't seem to write into the .packlist...
-            ### can't figure out what to uninstall then...
+            my $minversion = 0.2609;
+            skip(qq[Uninstalling requires at least Module::Build $minversion], 1)
+              unless eval { Module::Build->VERSION($minversion); 1 };
+            
             ok( $mod->uninstall,"Uninstalling module" );
         }
     }

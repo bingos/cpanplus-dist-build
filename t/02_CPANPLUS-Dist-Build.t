@@ -10,6 +10,16 @@ BEGIN {
 }
 
 use strict;
+
+# In order to get the uninstall stuff to work, we have to push this
+# dir onto @INC before loading CPANPLUS.
+my $Lib;
+BEGIN {
+  $Lib = File::Spec->rel2abs(File::Spec->catdir( qw[dummy-perl] ));
+  my $liblib = File::Spec->catdir($Lib, 'lib', 'perl5');
+  push @INC, $liblib;
+}
+
 use CPANPLUS::Configure;
 use CPANPLUS::Backend;
 use CPANPLUS::Internals::Constants;
@@ -28,7 +38,6 @@ my $Utils   = 'CPANPLUS::Internals::Utils';
 my $Have_CC =  can_run($Config{'cc'} )? 1 : 0;
 
 
-my $Lib     = File::Spec->rel2abs(File::Spec->catdir( qw[dummy-perl] ));
 my $Src     = File::Spec->rel2abs(File::Spec->catdir( qw[src] ));
 
 

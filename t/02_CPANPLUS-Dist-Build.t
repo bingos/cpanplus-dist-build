@@ -150,12 +150,15 @@ while( my($path,$need_cc) = each %Map ) {
             # in order to test uninstallation
             'lib'->import( File::Spec->catdir($Lib, 'lib', 'perl5') );
 
+            # EU::Installed and CP+::M are only capable of searching
+            # for modules in the core directories.  We need to fake
+            # them out with our own subs here.
             my $packlist = find_module($mod->name . '::.packlist');
             ok $packlist, "Found packlist";
             
             my $p = ExtUtils::Packlist->new($packlist);
             ok keys(%$p) > 0, "Packlist contains entries";
-            
+
             local $^W = 0; # Avoid 'redefined' warnings
             local *CPANPLUS::Module::installed_version = sub {1};
             local *CPANPLUS::Module::packlist = sub { [$p] };

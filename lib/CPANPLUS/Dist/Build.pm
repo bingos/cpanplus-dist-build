@@ -293,7 +293,7 @@ sub prepare {
             # XXX get the latest version from the CPAN index and check it
             no strict 'refs';
             local ${$mod . '::VERSION'} = get_indexed_version($mod);  # XXX this function doesn't exist
-            my $status = Module::Build->check_installed_status($mod, $prereqs->{$mod});
+            $status = Module::Build->check_installed_status($mod, $prereqs->{$mod});
 	    if ($status->{ok}) {
 		$prereqs_out{$mod} = $status->{have};
 		next;

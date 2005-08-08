@@ -23,6 +23,8 @@ use Data::Dumper;
 use Config;
 use IPC::Cmd        'can_run';
 
+$SIG{__WARN__} = sub {warn @_ unless @_ && $_[0] =~ /redefined|isn't numeric/};
+
 # Load these two modules in advance, even though they would be
 # auto-loaded, because we want to override some of their subs.
 use ExtUtils::Packlist;
@@ -67,7 +69,7 @@ my %Map     = ( noxs    => 0,
     $Conf->set_conf( cpantest => 0 );
     
     ### we dont need sudo -- we're installing in our own sandbox now
-    $Conf->set_program( sudo => undef );
+    $Conf->set_program( sudo => '' );
 }
 
 use_ok( $Class );
@@ -159,7 +161,6 @@ while( my($path,$need_cc) = each %Map ) {
             my $p = ExtUtils::Packlist->new($packlist);
             ok keys(%$p) > 0, "Packlist contains entries";
 
-            local $^W = 0; # Avoid 'redefined' warnings
             local *CPANPLUS::Module::installed_version = sub {1};
             local *CPANPLUS::Module::packlist = sub { [$p] };
             local *ExtUtils::Installed::files = sub { keys %$p };

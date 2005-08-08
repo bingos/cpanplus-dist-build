@@ -10,16 +10,6 @@ BEGIN {
 }
 
 use strict;
-
-# In order to get the uninstall stuff to work, we have to push this
-# dir onto @INC before loading CPANPLUS.
-my $Lib;
-BEGIN {
-  $Lib = File::Spec->rel2abs(File::Spec->catdir( qw[dummy-perl] ));
-  my $liblib = File::Spec->catdir($Lib, 'lib', 'perl5');
-  push @INC, $liblib;
-}
-
 use CPANPLUS::Configure;
 use CPANPLUS::Backend;
 use CPANPLUS::Internals::Constants;
@@ -33,11 +23,17 @@ use Data::Dumper;
 use Config;
 use IPC::Cmd        'can_run';
 
+# Load these two modules in advance, even though they would be
+# auto-loaded, because we want to override some of their subs.
+use ExtUtils::Packlist;
+use ExtUtils::Installed;
+
 my $Class   = 'CPANPLUS::Dist::Build';
 my $Utils   = 'CPANPLUS::Internals::Utils';
 my $Have_CC =  can_run($Config{'cc'} )? 1 : 0;
 
 
+my $Lib     = File::Spec->rel2abs(File::Spec->catdir( qw[dummy-perl] ));
 my $Src     = File::Spec->rel2abs(File::Spec->catdir( qw[src] ));
 
 
@@ -149,6 +145,21 @@ while( my($path,$need_cc) = each %Map ) {
             my $minversion = 0.2609;
             skip(qq[Uninstalling requires at least Module::Build $minversion], 1)
               unless eval { Module::Build->VERSION($minversion); 1 };
+
+            # The installation directory actually needs to be in @INC
+            # in order to test uninstallation
+            'lib'->import( File::Spec->catdir($Lib, 'lib', 'perl5') );
+
+            my $packlist = find_module($mod->name . '::.packlist');
+            ok $packlist, "Found packlist";
+            
+            my $p = ExtUtils::Packlist->new($packlist);
+            ok keys(%$p) > 0, "Packlist contains entries";
+            
+            local $^W = 0; # Avoid 'redefined' warnings
+            local *CPANPLUS::Module::installed_version = sub {1};
+            local *CPANPLUS::Module::packlist = sub { [$p] };
+            local *ExtUtils::Installed::files = sub { keys %$p };
             
             ok( $mod->uninstall,"Uninstalling module" );
         }
@@ -156,6 +167,26 @@ while( my($path,$need_cc) = each %Map ) {
 
     ### throw away all the extracted stuff
     $Utils->_rmdir( dir => $Conf->get_conf('base') );
+}
+
+sub find_module {
+  my $module = shift;
+
+  # Don't add the .pm yet, in case it's a packlist or something like ExtUtils::xsubpp.
+  my $file = File::Spec->catfile( split m/::/, $module );
+  my $candidate;
+  foreach (@INC) {
+    if (-e ($candidate = File::Spec->catdir($_, $file))
+        or
+        -e ($candidate = File::Spec->catdir($_, "$file.pm"))
+        or
+        -e ($candidate = File::Spec->catdir($_, 'auto', $file))
+        or
+        -e ($candidate = File::Spec->catdir($_, 'auto', "$file.pm"))) {
+      return $candidate;
+    }
+  }
+  return;
 }
 
 # Local variables:

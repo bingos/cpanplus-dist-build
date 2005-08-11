@@ -336,8 +336,11 @@ sub _find_prereqs {
     my $mb   = $dist->status->_mb_object;
     my $self = $dist->parent;
 
-    ### Lame++, at least return an empty hashref...
-    my $prereqs = $mb->requires || {};
+    my $prereqs = {};
+    foreach my $type ('requires', 'build_requires') {
+      my $p = $mb->$type() || {};
+      $prereqs->{$_} = $p->{$_} foreach keys %$p;
+    }
     $self->status->prereqs( $prereqs );
 
     return $prereqs;

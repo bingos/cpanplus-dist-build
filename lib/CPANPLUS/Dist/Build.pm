@@ -722,13 +722,6 @@ The number listed is the bug number on C<rt.cpan.org>.
 
 =over 4
 
-=item * Uninstall modules installed by Module::Build (#13308)
-
-Module::Build doesn't write a so called C<packlist> file, which holds
-a list of all files installed by a distribution. Without this file we
-don't know what to remove. Until Module::Build generates this
-C<packlist>, we are unable to remove any installations done by it.
-
 =item * Module::Build's version comparison is not supported.
 
 Module::Build has its own way of defining what versions are considered
@@ -739,7 +732,7 @@ according to Module::Build's version comparison scheme.
 As a work around, we now simply assume that the most recent version on
 CPAN satisfies a dependency.
 
-=item * Module::Build can not be upgraded using it's own API (#13169)
+=item * Module::Build can not be upgraded using its own API (#13169)
 
 This is due to the fact that the Build file insists on adding a path
 to C<@INC> which force the loading of the C<not yet installed>

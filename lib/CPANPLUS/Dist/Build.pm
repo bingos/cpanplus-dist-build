@@ -335,15 +335,29 @@ sub _find_prereqs {
     my $dist = shift;
     my $mb   = $dist->status->_mb_object;
     my $self = $dist->parent;
+    my $cb   = $self->parent;
 
     my $prereqs = {};
     foreach my $type ('requires', 'build_requires') {
       my $p = $mb->$type() || {};
       $prereqs->{$_} = $p->{$_} foreach keys %$p;
     }
-    $self->status->prereqs( $prereqs );
 
-    return $prereqs;
+    ### allows for a user defined callback to filter the prerequisite
+    ### list as they see fit, to remove (or add) any prereqs they see
+    ### fit. The default installed callback will return the hashref in
+    ### an unmodified form
+    ### this callback got added after cpanplus 0.0562, so use a 'can'
+    ### to find out if it's supported. For older versions, we'll just
+    ### return the hashref as is ourselves.
+    my $href    = $cb->_callbacks->can('filter_prereqs')
+                    ? $cb->_callbacks->filter_prereqs->( $cb, $prereqs )
+                    : $prereqs;
+
+    $self->status->prereqs( $href );
+
+    ### make sure it's not the same ref
+    return { %$href };
 }
 
 =pod

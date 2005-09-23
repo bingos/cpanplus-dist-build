@@ -277,6 +277,7 @@ sub prepare {
         $dist->status->_mb_object( $mb );
 
         ### resolve prereqs ###
+        # XXX according to Jos, this should actually be in _resolve_prereqs(), not here.
         my $prereqs = $dist->_find_prereqs( verbose => $verbose );
 	my %prereqs_out;
 
@@ -290,9 +291,9 @@ sub prepare {
             my $status = Module::Build->check_installed_status($mod, $prereqs->{$mod});
             next if $status->{ok};
             
-            # XXX get the latest version from the CPAN index and check it
+            # Get the latest version from the CPAN index and check it
             no strict 'refs';
-            local ${$mod . '::VERSION'} = get_indexed_version($mod);  # XXX this function doesn't exist
+            local ${$mod . '::VERSION'} = $cb->module_tree($mod)->version;
             $status = Module::Build->check_installed_status($mod, $prereqs->{$mod});
 	    if ($status->{ok}) {
 		$prereqs_out{$mod} = $status->{have};

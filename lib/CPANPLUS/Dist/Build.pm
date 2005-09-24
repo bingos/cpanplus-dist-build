@@ -276,37 +276,8 @@ sub prepare {
 
         $dist->status->_mb_object( $mb );
 
-        ### resolve prereqs ###
-        # XXX according to Jos, this should actually be in _resolve_prereqs(), not here.
-        my $prereqs = $dist->_find_prereqs( verbose => $verbose );
-	my %prereqs_out;
+        $self->status->prereqs( $dist->_find_prereqs( verbose => $verbose ) );
 
-        for my $mod (keys %$prereqs) {
-            # Check whether the installed version (if any) satisfies this
-            # prereq.  If not, check whether the latest CPAN version
-            # satisfies it.  If not, fail.
-
-            warn "Checking prereq $mod ($prereqs->{$mod})";
-
-            my $status = Module::Build->check_installed_status($mod, $prereqs->{$mod});
-            next if $status->{ok};
-            
-            # Get the latest version from the CPAN index and check it
-            no strict 'refs';
-            local ${$mod . '::VERSION'} = $cb->module_tree($mod)->version;
-            $status = Module::Build->check_installed_status($mod, $prereqs->{$mod});
-	    if ($status->{ok}) {
-		$prereqs_out{$mod} = $status->{have};
-		next;
-	    }
-	    
-            error(loc("This distribution depends on $mod, but the latest version of $mod on CPAN ".
-		      "doesn't satisfy the specific version dependency ($prereqs->{$mod}). ".
-		      "Please try to resolve this dependency manually."));
-            $fail++;
-        }
-        
-        $self->status->prereqs( \%prereqs_out );
     }
     
     ### send out test report? ###
@@ -359,6 +330,34 @@ sub _find_prereqs {
 
     ### make sure it's not the same ref
     return { %$href };
+}
+
+sub prereq_satisfied {
+  # Return true if this prereq is satisfied.  Return false if it's
+  # not.  Also issue an error if the latest CPAN version doesn't
+  # satisfy it.
+  
+  my ($dist, %args) = @_;
+  my $mb   = $dist->status->_mb_object;
+  my $cb   = $dist->parent->parent;
+  my $mod = $args{modobj}->module;
+  
+  my $status = $mb->check_installed_status($mod, $args{version});
+  return 1 if $status->{ok};
+  
+  # Check the latest version from the CPAN index
+  {
+    no strict 'refs';
+    local ${$mod . '::VERSION'} = $args{modobj}->version;
+    $status = $mb->check_installed_status($mod, $args{version});
+  }
+  unless( $status->{ok} ) {
+    error(loc("This distribution depends on $mod, but the latest version of $mod on CPAN ".
+	      "doesn't satisfy the specific version dependency ($args{version}). ".
+	      "Please try to resolve this dependency manually."));
+  }
+  
+  return 0;
 }
 
 =pod

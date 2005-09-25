@@ -736,16 +736,6 @@ The number listed is the bug number on C<rt.cpan.org>.
 
 =over 4
 
-=item * Module::Build's version comparison is not supported.
-
-Module::Build has its own way of defining what versions are considered
-satisfactory for a prerequisite, and which ones aren't. This syntax is
-something specific to Module::Build and we currently have no way to see
-if a module on disk, on cpan or something similar is satisfactory
-according to Module::Build's version comparison scheme.
-As a work around, we now simply assume that the most recent version on
-CPAN satisfies a dependency.
-
 =item * Module::Build can not be upgraded using its own API (#13169)
 
 This is due to the fact that the Build file insists on adding a path

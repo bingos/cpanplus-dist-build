@@ -472,7 +472,7 @@ sub create {
     my %buildflags = $dist->_buildflags_as_hash( $buildflags );
     $dist->status->_buildflags( $buildflags );
 
-    my $fail; my $prereq_fail;
+    my $fail; my $prereq_fail; my $test_fail;
     RUN: {
 
         ### this will set the directory back to the start
@@ -542,7 +542,7 @@ sub create {
     if( $conf->get_conf('cpantest') and not $prereq_fail ) {
         $cb->_send_report(
             module          => $self,
-            failed          => $fail,
+            failed          => $test_fail || $fail,
             buffer          => CPANPLUS::Error->stack_as_string,
             verbose         => $verbose,
             force           => $force,
@@ -595,6 +595,10 @@ sub install {
 
     my $dir;
     unless( $dir = $self->status->extract ) {
+                ### mark specifically *test* failure.. so we dont
+                ### send success on force...
+                $test_fail++;
+                
         error( loc( "No dir found to operate on!" ) );
         return;
     }

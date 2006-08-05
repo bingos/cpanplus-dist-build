@@ -522,6 +522,10 @@ sub create {
             if( $@ ) {
                 error(loc("Could not run '%1': %2", 'Build test', "$@"));
 
+                ### mark specifically *test* failure.. so we dont
+                ### send success on force...
+                $test_fail++;
+
                 unless($force) {
                     $dist->status->test(0);
                     $fail++; last RUN;
@@ -585,8 +589,7 @@ sub install {
                          store   => \$verbose },
             force   => { default => $conf->get_conf('force'),
                          store   => \$force },
-            perl    => { default => $conf->get_program('perl') || $^X,
-                         store   => \$perl },
+            perl    => { default => $^X, store   => \$perl },
         };
     
         my $args = check( $tmpl, \%hash ) or return;
@@ -595,10 +598,6 @@ sub install {
 
     my $dir;
     unless( $dir = $self->status->extract ) {
-                ### mark specifically *test* failure.. so we dont
-                ### send success on force...
-                $test_fail++;
-                
         error( loc( "No dir found to operate on!" ) );
         return;
     }

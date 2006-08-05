@@ -38,19 +38,15 @@ my $Have_CC =  can_run($Config{'cc'} )? 1 : 0;
 my $Lib     = File::Spec->rel2abs(File::Spec->catdir( qw[dummy-perl] ));
 my $Src     = File::Spec->rel2abs(File::Spec->catdir( qw[src] ));
 
-
 my $Verbose = @ARGV ? 1 : 0;
-my $Conf    = CPANPLUS::Configure->new( 
-                conf => {   
-                    base        => 'dummy-cpanplus',   
-                    dist_type   => '',
-                    verbose     => $Verbose,
-                    ### running tests will mess with the test output 
-                    ### counter so skip 'm
-                    skiptest    => 1,
-                } );
+my $CB      = CPANPLUS::Backend->new;
+my $Conf    = $CB->configure_object;
 
-my $CB      = CPANPLUS::Backend->new( $Conf );
+$Conf->set_conf( base       => 'dummy-cpanplus' );
+$Conf->set_conf( dist_type  => '' );
+$Conf->set_conf( verbose    => $Verbose );
+### running tests will mess with the test output so skip 'm
+$Conf->set_conf( skiptest   => 1 );
 
                 # path, cc needed?
 my %Map     = ( noxs    => 0,
@@ -69,7 +65,7 @@ my %Map     = ( noxs    => 0,
     $Conf->set_conf( cpantest => 0 );
     
     ### we dont need sudo -- we're installing in our own sandbox now
-    $Conf->set_program( sudo => '' );
+    $Conf->set_program( sudo => undef );
 }
 
 use_ok( $Class );
@@ -120,6 +116,9 @@ while( my($path,$need_cc) = each %Map ) {
     SKIP: {
         skip("The CC compiler listed in Config.pm is not available " .
              "-- skipping compile tests", 5) if $need_cc && !$Have_CC;
+        skip("Module::Build is not compiled with C support ".
+             "-- skipping compile tests", 5) 
+             unless Module::Build->_mb_feature('C_support');
 
         ok( $mod->create( ),    "Creating module" );
         ok( $mod->status->dist_cpan->status->created,

@@ -8,7 +8,7 @@ for details.
 
 * Description
 
-Params::Check
+CPANPLUS::Dist::Build
 
     CPANPLUS::Dist::Build is a distribution class for Module::Build
     related modules.

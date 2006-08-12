@@ -1,6 +1,13 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
+0.04
+  - Address RT #13926: build_requires not included in prerequisites
+  - Address RT #14240 Why does it say "Params::Check" in the README 
+    Description?
+  - Address RT #13937 Won't install without force because newer 
+    version installed (from CPANPLUS 0.055?)
+  - Update dependency versions in Makefile.PL
+  
 0.03
-
  - We were sending cpantesters 'pass' reports whenever --force was in
    effect, which is probably not the right thing to do. [Jos Boumans]

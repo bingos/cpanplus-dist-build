@@ -7,7 +7,7 @@ WriteMakefile (
     dist            => { COMPRESS => 'gzip -9f', SUFFIX => 'gz' },
     PREREQ_PM       => { 
                         'Test::More'                => 0, 
-                        'CPANPLUS'                  => '0.055',
+                        'CPANPLUS'                  => '0.072',
                         'Locale::Maketext::Simple'  => 0,
                         'Params::Check'             => '0.22',
                         'IPC::Cmd'                  => '0.23',

@@ -45,6 +45,7 @@ my $Conf    = $CB->configure_object;
 $Conf->set_conf( base       => 'dummy-cpanplus' );
 $Conf->set_conf( dist_type  => '' );
 $Conf->set_conf( verbose    => $Verbose );
+$Conf->set_conf( signature  => 0 );
 ### running tests will mess with the test output so skip 'm
 $Conf->set_conf( skiptest   => 1 );
 

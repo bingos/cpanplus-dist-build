@@ -20,3 +20,5 @@
 \.orig$
 \.rpt$
 ^patches/
+~$
+^\.

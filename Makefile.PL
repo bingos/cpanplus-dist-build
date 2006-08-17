@@ -16,6 +16,6 @@ WriteMakefile (
                         'Module::Build'             => '0.2611',
                         'File::Spec'                => 0,
                     },
-    AUTHOR          => 'Jos Boumans <kane[at]cpan.org>',
+    AUTHOR          => 'Jos Boumans <kane[at]cpan.org>, Ken Williams <kwilliams@cpan.org>',
     ABSTRACT        => 'CPANPLUS plugin to install packages that use Build.PL',
 );     

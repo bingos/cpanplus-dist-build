@@ -13,7 +13,7 @@ WriteMakefile (
                         'IPC::Cmd'                  => '0.23',
                         'Module::Load::Conditional' => '0.06',
                         'Module::Pluggable'         => '2.4',
-                        'Module::Build'             => '0.2611',
+                        'Module::Build'             => '0.28',
                         'File::Spec'                => 0,
                     },
     AUTHOR          => 'Jos Boumans <kane[at]cpan.org>, Ken Williams <kwilliams@cpan.org>',

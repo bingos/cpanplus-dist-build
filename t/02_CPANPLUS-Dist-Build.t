@@ -205,6 +205,9 @@ while( my($path,$need_cc) = each %Map ) {
     my $re = quotemeta( $build_pl );
     like( CPANPLUS::Error->stack_as_string, qr/ENV=$re/,
                                 "   \$ENV $env set correctly during execution");
+
+    ### and the ENV var should no longer be set now
+    ok( !$ENV{$env},            "   ENV var now unset" );
 }    
 
 

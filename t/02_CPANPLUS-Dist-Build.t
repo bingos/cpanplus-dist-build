@@ -42,6 +42,15 @@ my $Verbose = @ARGV ? 1 : 0;
 my $CB      = CPANPLUS::Backend->new;
 my $Conf    = $CB->configure_object;
 
+
+### create a fake object, so we don't use the actual module tree
+my $Mod = CPANPLUS::Module::Fake->new(
+                module  => 'Foo::Bar',
+                path    => 'src',
+                author  => CPANPLUS::Module::Author::Fake->new,
+                package => 'Foo-Bar-0.01.tar.gz',
+            );
+
 $Conf->set_conf( base       => 'dummy-cpanplus' );
 $Conf->set_conf( dist_type  => '' );
 $Conf->set_conf( verbose    => $Verbose );
@@ -76,14 +85,7 @@ ok( $Class->format_available,   "Format is available" );
 
 while( my($path,$need_cc) = each %Map ) {
 
-    ### create a fake object, so we don't use the actual module tree
-    my $mod = CPANPLUS::Module::Fake->new(
-                    module  => 'Foo::Bar',
-                    path    => 'src',
-                    author  => CPANPLUS::Module::Author::Fake->new,
-                    package => 'Foo-Bar-0.01.tar.gz',
-                );
-
+    my $mod = $Mod->clone;
     ok( $mod,                   "Module object created for '$path'" );        
                 
     ### set the fetch location -- it's local
@@ -173,6 +175,39 @@ while( my($path,$need_cc) = each %Map ) {
     $Utils->_rmdir( dir => $Conf->get_conf('base') );
 }
 
+### test ENV setting while running Build.PL code
+{   ### use print() not die() -- we're redirecting STDERR in tests!
+    my $env     = ENV_CPANPLUS_IS_EXECUTING;
+    my $clone   = $Mod->clone;
+    
+    ok( $clone,                 'Testing ENV settings $dist->prepare' );
+    
+    $clone->status->fetch( File::Spec->catfile($Src, 'noxs', $clone->package) );
+    ok( $clone->extract,        '   Files extracted' );
+    
+    ### write our own Build.PL file    
+    my $build_pl = BUILD_PL->( $clone->status->extract );
+    {   my $fh   = OPEN_FILE->( $build_pl, '>' );
+        print $fh "die qq[ENV=\$ENV{$env}\n];";
+        close $fh;
+    }
+    ok( -e $build_pl,           "   File exists" );
+
+    ### clear errors    
+    CPANPLUS::Error->flush;
+
+    ### since we're die'ing in the Build.PL, do a local *STDERR,
+    ### so we dont spam the result through the test -- this is expected
+    ### behaviour after all.
+    my $rv = do { local *STDERR; $clone->prepare( force => 1 ) };
+    ok( !$rv,                   '   $mod->prepare failed' );
+
+    my $re = quotemeta( $build_pl );
+    like( CPANPLUS::Error->stack_as_string, qr/ENV=$re/,
+                                "   \$ENV $env set correctly during execution");
+}    
+
+
 sub find_module {
   my $module = shift;
 
@@ -192,6 +227,7 @@ sub find_module {
   }
   return;
 }
+
 
 # Local variables:
 # c-indentation-style: bsd

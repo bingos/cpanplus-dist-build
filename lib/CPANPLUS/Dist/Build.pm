@@ -192,6 +192,11 @@ C<prepare> prepares a distribution, running C<Module::Build>'s
 C<new_from_context> method, and establishing any prerequisites this
 distribution has.
 
+When running C<< Module::Build->new_from_context >>, the environment 
+variable C<PERL5_CPANPLUS_IS_EXECUTING> will be set to the full path 
+of the C<Build.PL> that is being executed. This enables any code inside
+the C<Build.PL> to know that it is being installed via CPANPLUS.
+
 After a succcesfull C<prepare> you may call C<create> to create the
 distribution, followed by C<install> to actually install it.
 
@@ -268,7 +273,11 @@ sub prepare {
     RUN: {
         # Wrap the exception that may be thrown here (should likely be
         # done at a much higher level).
-        my $mb = eval { Module::Build->new_from_context( %buildflags ) };
+        my $mb = eval { 
+            my $env = ENV_CPANPLUS_IS_EXECUTING;
+            local $ENV{$env} = BUILD_PL->( $dir );
+            Module::Build->new_from_context( %buildflags ) 
+        };
         if( !$mb or $@ ) {
             error(loc("Could not create Module::Build object: %1","$@"));
             $fail++; last RUN;

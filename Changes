@@ -1,5 +1,10 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
+0.05  Sun Feb 25 17:06:38 CET 2007
+ - Set $ENV{PERL5_CPANPLUS_IS_EXECUTING} to the full path of the
+   Build.PL file when running Module::Build->new_from_context.
+   Requested by Adam Kennedy <cpan@ali.as>.
+
 0.04  Wed Aug 16 22:00:18 CDT 2006
 
  - Address RT #13926: build_requires not included in prerequisites

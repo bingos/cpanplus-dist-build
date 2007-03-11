@@ -274,7 +274,7 @@ sub prepare {
         # Wrap the exception that may be thrown here (should likely be
         # done at a much higher level).
         my $mb = eval { 
-            my $env = ENV_CPANPLUS_IS_EXECUTING;
+            my $env = 'ENV_CPANPLUS_IS_EXECUTING';
             local $ENV{$env} = BUILD_PL->( $dir );
             Module::Build->new_from_context( %buildflags ) 
         };

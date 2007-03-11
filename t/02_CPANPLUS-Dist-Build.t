@@ -177,7 +177,7 @@ while( my($path,$need_cc) = each %Map ) {
 
 ### test ENV setting while running Build.PL code
 {   ### use print() not die() -- we're redirecting STDERR in tests!
-    my $env     = ENV_CPANPLUS_IS_EXECUTING;
+    my $env     = 'ENV_CPANPLUS_IS_EXECUTING';
     my $clone   = $Mod->clone;
     
     ok( $clone,                 'Testing ENV settings $dist->prepare' );

@@ -2,6 +2,7 @@
 ^t/dummy-perl/man/man1/(?!\.hidden)
 ^t/dummy-perl/man/man3/(?!\.hidden)
 ^t/dummy-perl/script/(?!\.hidden)
+^t/dummy-cpanplus
 ^blib/
 ^t/\..*
 ^pmfiles.dat$

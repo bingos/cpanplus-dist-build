@@ -5,6 +5,7 @@ WriteMakefile (
     NAME            => 'CPANPLUS::Dist::Build',
     VERSION_FROM    => 'lib/CPANPLUS/Dist/Build.pm', # finds $VERSION
     dist            => { COMPRESS => 'gzip -9f', SUFFIX => 'gz' },
+    clean           => { FILES => 't/dummy-cpanplus' },
     PREREQ_PM       => { 
                         'Test::More'                => 0, 
                         'CPANPLUS'                  => '0.072',

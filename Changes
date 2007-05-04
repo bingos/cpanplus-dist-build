@@ -1,5 +1,10 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
+0.06 - Fri May  4 14:11:36 2007
+
+ - Make test suite compatible with the perl core. No functional
+   changes in this release; users need not upgrade.
+
 0.05 - Sun Mar 11 16:58:13 2007
 
  - Set $ENV{PERL5_CPANPLUS_IS_EXECUTING} to the full path of the

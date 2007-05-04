@@ -1,12 +1,7 @@
-BEGIN { chdir 't' if -d 't' };
-
-### this is to make devel::cover happy ###
-BEGIN {
-    use File::Spec;
-    require lib;
-    for (qw[../lib inc]) {
-        my $l = 'lib'; $l->import(File::Spec->rel2abs($_)) 
-    }
+### make sure we can find our conf.pl file
+BEGIN { 
+    use FindBin; 
+    require "$FindBin::Bin/inc/conf.pl";
 }
 
 use strict;

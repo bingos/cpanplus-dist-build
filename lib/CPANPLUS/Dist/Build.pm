@@ -535,10 +535,13 @@ sub create {
                 ### send success on force...
                 $test_fail++;
 
-                unless($force) {
-                    $dist->status->test(0);
-                    $fail++; last RUN;
+                if( !$force and !$cb->_callbacks->proceed_on_test_failure->(
+                                      $self, $@ ) 
+                ) {
+                    $dist->status->test(0);                 
+                    $fail++; last RUN;     
                 }
+                
             } else {
                 $dist->status->test(1);
             }

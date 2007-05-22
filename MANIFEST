@@ -8,9 +8,6 @@ README
 t/01_CPANPLUS-Dist-Build-Constants.t
 t/02_CPANPLUS-Dist-Build.t
 t/dummy-perl/.hidden
-t/dummy-perl/lib/.hidden
-t/dummy-perl/man/man1/.hidden
-t/dummy-perl/man/man3/.hidden
 t/inc/conf.pl
 t/src/noxs/Foo-Bar-0.01.tar.gz
 t/src/xs/Foo-Bar-0.01.tar.gz

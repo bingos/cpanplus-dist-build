@@ -82,6 +82,9 @@ sub _clean_test_dir {
 
     for my $dir ( @$dirs ) {
 
+        ### if it's not there, don't bother
+        next unless -d $dir;
+
         my $dh;
         opendir $dh, $dir or die "Could not open basedir '$dir': $!";
         while( my $file = readdir $dh ) { 

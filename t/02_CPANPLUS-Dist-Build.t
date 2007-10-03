@@ -98,7 +98,7 @@ while( my($path,$need_cc) = each %Map ) {
                 
     ### set the fetch location -- it's local
     {   my $where = File::Spec->rel2abs(
-                            File::Spec->catdir( $Src, $path, $mod->package )
+                            File::Spec->catfile( $Src, $path, $mod->package )
                         );
                         
         $mod->status->fetch( $where );
@@ -232,13 +232,19 @@ sub find_module {
   my $file = File::Spec->catfile( split m/::/, $module );
   my $candidate;
   foreach (@INC) {
-    if (-e ($candidate = File::Spec->catdir($_, $file))
+    if (-e ($candidate = File::Spec->catfile($_, $file))
         or
-        -e ($candidate = File::Spec->catdir($_, "$file.pm"))
+        -e ($candidate = File::Spec->catfile($_, "$file.pm"))
         or
-        -e ($candidate = File::Spec->catdir($_, 'auto', $file))
+        -e ($candidate = File::Spec->catfile($_, 'auto', $file))
         or
-        -e ($candidate = File::Spec->catdir($_, 'auto', "$file.pm"))) {
+        -e ($candidate = File::Spec->catfile($_, 'auto', "$file.pm"))
+        or
+        -e ($candidate = File::Spec->catfile($_, $Config{archname},
+                                             'auto', $file))
+        or
+        -e ($candidate = File::Spec->catfile($_, $Config{archname},
+                                             'auto', "$file.pm"))) {
       return $candidate;
     }
   }

@@ -164,7 +164,13 @@ while( my($path,$need_cc) = each %Map ) {
 
             # The installation directory actually needs to be in @INC
             # in order to test uninstallation
-            'lib'->import( File::Spec->catdir($Lib, 'lib', 'perl5') );
+            {   my $libdir = File::Spec->catdir($Lib, 'lib', 'perl5');
+                
+                # lib.pm is documented to require unix-style paths
+                $libdir = VMS::Filespec::unixify($libdir) if $^O eq 'VMS';
+
+                'lib'->import( $libdir );
+            }
 
             # EU::Installed and CP+::M are only capable of searching
             # for modules in the core directories.  We need to fake

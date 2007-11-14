@@ -132,7 +132,7 @@ sub _clean_test_dir {
             ### directory, rmtree it
             if( -d $path ) {
 
-                $file =~ s/\.dir//i if $^O eq 'VMS';
+                $file =~ s/\.dir$//i if $^O eq 'VMS';
                 
                 my $dirpath = File::Spec->catdir( $dir, $file );
 

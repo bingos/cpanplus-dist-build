@@ -31,7 +31,7 @@ BEGIN {
     ### and friends get picked up
     $old_env_path = $ENV{PATH};
     $ENV{'PATH'}  = join $Config{'path_sep'}, 
-                    grep { defined } "$FindBin::Bin/../bin", $ENV{'PATH'};
+                    grep { defined } "$FindBin::Bin/../../../bin", $ENV{'PATH'};
 
     ### Fix up the path to perl, as we're about to chdir
     ### but only under perlcore, or if the path contains delimiters,
@@ -62,10 +62,10 @@ END {
         ### path is "magic" on VMS, we can not tell if it really existed before
         ### this was run, because VMS will magically pretend that a PATH
         ### environment variable exists set to the current working directory
-        $ENV{PATH} = $old_path;
+        $ENV{PATH} = $old_env_path;
 
-        if (defined $old_perl5lib) {
-            $ENV{PERL5LIB} = $old_perl5lib;
+        if (defined $old_env_perl5lib) {
+            $ENV{PERL5LIB} = $old_env_perl5lib;
         } else {
             delete $ENV{PERL5LIB};
         }
@@ -128,15 +128,18 @@ sub _clean_test_dir {
             ### mailing-lists/perl5-porters/2007-10/msg00064.html
             ### for details -- the below regex could use some touchups
             ### according to John. M.            
-            $file =~ s/\.dir//i if $^O eq 'VMS';
-            
-            my $dirpath = File::Spec->catdir( $dir, $file );
             
             ### directory, rmtree it
             if( -d $path ) {
-                print "# Deleting directory '$path'\n" if $verbose;
-                eval { rmtree( $path ) };
-                warn "Could not delete '$path' while cleaning up '$dir'" if $@;
+
+                $file =~ s/\.dir//i if $^O eq 'VMS';
+                
+                my $dirpath = File::Spec->catdir( $dir, $file );
+
+                print "# Deleting directory '$dirpath'\n" if $verbose;
+                eval { rmtree( $dirpath ) };
+                warn "Could not delete '$dirpath' while cleaning up '$dir'" 
+                    if $@;
            
             ### regular file
             } else {

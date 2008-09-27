@@ -1,5 +1,8 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
+ - Fixed some issues with test output not appearing in CPAN Tester
+   reports. [Chris Williams]
+
 0.06 - Fri May  4 14:11:36 2007
 
  - Make test suite compatible with the perl core. No functional

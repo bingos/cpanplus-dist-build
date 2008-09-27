@@ -509,7 +509,10 @@ sub create {
             last RUN;
         }
 
-        eval { $mb->dispatch('build', %buildflags) };
+        my $build_output;
+        eval { _capture ( sub { $mb->dispatch('build', %buildflags) }, \$build_output, \$build_output ) };
+        msg( $build_output, $verbose );
+
         if( $@ ) {
             error(loc("Could not run '%1': %2", 'Build', "$@"));
             $dist->status->build(0);
@@ -527,7 +530,9 @@ sub create {
         ### M::B/Test::Harness bug. Reported as #9793 with patch 
         ### against 0.2607 on 26/1/2005
         unless( $skiptest ) {
-            eval { $mb->dispatch('test', %buildflags) };
+            my $test_output;
+            eval { _capture ( sub { $mb->dispatch('test', %buildflags) }, \$test_output, \$test_output ) };
+            msg( $test_output, $verbose );
             if( $@ ) {
                 error(loc("Could not run '%1': %2", 'Build test', "$@"));
 
@@ -536,18 +541,18 @@ sub create {
                 $test_fail++;
 
                 if( !$force and !$cb->_callbacks->proceed_on_test_failure->(
-                                      $self, $@ ) 
+                                      $self, $@ )
                 ) {
-                    $dist->status->test(0);                 
-                    $fail++; last RUN;     
+                    $dist->status->test(0);
+                    $fail++; last RUN;
                 }
-                
+
             } else {
                 $dist->status->test(1);
             }
         } else {
             msg(loc("Tests skipped"), $verbose);
-        }            
+        }
     }
 
     unless( $cb->_chdir( dir => $orig ) ) {
@@ -658,7 +663,9 @@ sub install {
     } else {
         my %buildflags = $dist->_buildflags_as_hash($buildflags);
 
-        eval { $mb->dispatch('install', %buildflags) };
+        my $install_output;
+        eval { _capture ( sub { $mb->dispatch('install', %buildflags) }, \$install_output, \$install_output ) };
+        msg( $install_output, $verbose );
         if( $@ ) {
             error(loc("Could not run '%1': %2", 'Build install', "$@"));
             $fail++;
@@ -744,6 +751,131 @@ sub dist_dir {
     return $distdir;
 }    
 
+sub _capture (&@) { ## no critic
+    my ($code, $output, $error, $output_file, $error_file) = @_;
+
+
+    # if either $output or $error are defined, then we need a variable for 
+    # results; otherwise we only capture to files and don't waste memory
+    if ( defined $output || defined $error ) {
+      for ($output, $error) {
+          $_ = \do { my $s; $s = ''} unless ref $_;
+          $$_ = '' if $_ != \undef && !defined($$_);
+      }
+    }
+
+    # merge if same refs for $output and $error or if both are undef -- 
+    # i.e. capture \&foo, undef, undef, $merged_file
+    # this means capturing into separate files *requires* at least one
+    # capture variable
+    my $should_merge = 
+      (defined $error && defined $output && $output == $error) || 
+      ( !defined $output && !defined $error ) || 
+      0;
+
+    my ($capture_out, $capture_err);
+
+    # undef means capture anonymously; anything other than \undef means 
+    # capture to that ref; \undef means skip capture
+    if ( !defined $output || $output != \undef ) { 
+        $capture_out = CPANPLUS::Dist::Build::_proxy->new(
+            'STDOUT', $output, undef, $output_file
+        );
+    }
+    if ( !defined $error || $error != \undef ) { 
+        my $capture_err = CPANPLUS::Dist::Build::_proxy->new(
+            'STDERR', $error, ($should_merge ? 'STDOUT' : undef), $error_file
+        );
+    }
+
+    # now that output capture is setup, call the subroutine
+    # results get read when IO::CaptureOutput::_proxy objects go out of scope
+    &$code();
+}
+
+package CPANPLUS::Dist::Build::_proxy;
+use File::Temp 'tempfile';
+use File::Basename qw/basename/;
+use Symbol qw/gensym qualify qualify_to_ref/;
+use Carp;
+
+sub _is_wperl { $^O eq 'MSWin32' && basename($^X) eq 'wperl.exe' }
+
+sub new {
+    my $class = shift;
+    my ($orig_fh, $capture_var, $merge_fh, $capture_file) = @_;
+    $orig_fh       = qualify($orig_fh);         # e.g. main::STDOUT
+    my $fhref = qualify_to_ref($orig_fh);  # e.g. \*STDOUT
+
+    # Duplicate the filehandle
+    my $saved_fh;
+    {
+        no strict 'refs'; ## no critic - needed for 5.005
+        if ( defined fileno($orig_fh) && ! _is_wperl() ) {
+            $saved_fh = gensym;
+            open $saved_fh, ">&$orig_fh" or croak "Can't redirect <$orig_fh> - $!";
+        }
+    }
+
+    # Create replacement filehandle if not merging
+    my ($newio_fh, $newio_file);
+    if ( ! $merge_fh ) {
+        $newio_fh = gensym;
+        if ($capture_file) {
+            $newio_file = $capture_file;
+        } else {
+            (undef, $newio_file) = tempfile;
+        }
+        open $newio_fh, "+>$newio_file" or croak "Can't write temp file for $orig_fh - $!";
+    }
+    else {
+        $newio_fh = qualify($merge_fh);
+    }
+
+    # Redirect (or merge)
+    {
+        no strict 'refs'; ## no critic -- needed for 5.005
+        open $fhref, ">&".fileno($newio_fh) or croak "Can't redirect $orig_fh - $!";
+    }
+
+    bless [$$, $orig_fh, $saved_fh, $capture_var, $newio_fh, $newio_file, $capture_file], $class;
+}
+
+sub DESTROY {
+    my $self = shift;
+
+    my ($pid, $orig_fh, $saved_fh, $capture_var, $newio_fh, 
+      $newio_file, $capture_file) = @$self;
+    return unless $pid eq $$; # only cleanup in the process that is capturing
+
+    # restore the original filehandle
+    my $fh_ref = Symbol::qualify_to_ref($orig_fh);
+    select((select ($fh_ref), $|=1)[0]);
+    if (defined $saved_fh) {
+        open $fh_ref, ">&". fileno($saved_fh) or croak "Can't restore $orig_fh - $!";
+    }
+    else {
+        close $fh_ref;
+    }
+
+    # transfer captured data to the scalar reference if we didn't merge
+    # $newio_file is undef if this file handle is merged to another
+    if (ref $capture_var && $newio_file) {
+        # some versions of perl complain about reading from fd 1 or 2
+        # which could happen if STDOUT and STDERR were closed when $newio
+        # was opened, so we just squelch warnings here and continue
+        local $^W; 
+        seek $newio_fh, 0, 0;
+        $$capture_var = do {local $/; <$newio_fh>};
+    }
+    close $newio_fh if $newio_file;
+
+    # Cleanup
+    return unless defined $newio_file && -e $newio_file;
+    return if $capture_file; # the "temp" file was explicitly named
+    unlink $newio_file or carp "Couldn't remove temp file '$newio_file' - $!";
+}
+
 =head1 KNOWN ISSUES
 
 Below are some of the known issues with Module::Build, that we hope 
@@ -787,6 +919,7 @@ terms as Perl itself.
 =cut
 
 1;
+
 
 # Local variables:
 # c-indentation-style: bsd

@@ -17,6 +17,7 @@
 ^samples/
 ^CPANPLUS.*gz$
 \.DS_Store$
+(^|/)\.svn(/|$)
 \.swp$
 \.orig$
 \.rpt$

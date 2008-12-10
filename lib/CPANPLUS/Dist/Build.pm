@@ -273,11 +273,16 @@ sub prepare {
     RUN: {
         # Wrap the exception that may be thrown here (should likely be
         # done at a much higher level).
+        my $prep_output;
+
         my $mb = eval { 
             my $env = 'ENV_CPANPLUS_IS_EXECUTING';
             local $ENV{$env} = BUILD_PL->( $dir );
-            Module::Build->new_from_context( %buildflags ) 
+            _capture ( sub { Module::Build->new_from_context(%buildflags) }, \$prep_output, \$prep_output )
         };
+
+        msg( $prep_output, $verbose );
+
         if( !$mb or $@ ) {
             error(loc("Could not create Module::Build object: %1","$@"));
             $fail++; last RUN;
@@ -339,34 +344,6 @@ sub _find_prereqs {
 
     ### make sure it's not the same ref
     return { %$href };
-}
-
-sub prereq_satisfied {
-  # Return true if this prereq is satisfied.  Return false if it's
-  # not.  Also issue an error if the latest CPAN version doesn't
-  # satisfy it.
-  
-  my ($dist, %args) = @_;
-  my $mb   = $dist->status->_mb_object;
-  my $cb   = $dist->parent->parent;
-  my $mod = $args{modobj}->module;
-  
-  my $status = $mb->check_installed_status($mod, $args{version});
-  return 1 if $status->{ok};
-  
-  # Check the latest version from the CPAN index
-  {
-    no strict 'refs';
-    local ${$mod . '::VERSION'} = $args{modobj}->version;
-    $status = $mb->check_installed_status($mod, $args{version});
-  }
-  unless( $status->{ok} ) {
-    error(loc("This distribution depends on $mod, but the latest version of $mod on CPAN ".
-	      "doesn't satisfy the specific version dependency ($args{version}). ".
-	      "Please try to resolve this dependency manually."));
-  }
-  
-  return 0;
 }
 
 =pod

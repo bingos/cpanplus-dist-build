@@ -278,10 +278,10 @@ sub prepare {
         my $mb = eval { 
             my $env = 'ENV_CPANPLUS_IS_EXECUTING';
             local $ENV{$env} = BUILD_PL->( $dir );
-            _capture ( sub { Module::Build->new_from_context(%buildflags) }, \$prep_output, \$prep_output )
+            _capture ( sub { Module::Build->new_from_context(%buildflags) }, $verbose, \$prep_output )
         };
 
-        msg( $prep_output, $verbose );
+        msg( $prep_output, 0 );
 
         if( !$mb or $@ ) {
             error(loc("Could not create Module::Build object: %1","$@"));
@@ -487,8 +487,8 @@ sub create {
         }
 
         my $build_output;
-        eval { _capture ( sub { $mb->dispatch('build', %buildflags) }, \$build_output, \$build_output ) };
-        msg( $build_output, $verbose );
+        eval { _capture ( sub { $mb->dispatch('build', %buildflags) }, $verbose, \$build_output ) };
+        msg( $build_output, 0 );
 
         if( $@ ) {
             error(loc("Could not run '%1': %2", 'Build', "$@"));
@@ -508,8 +508,8 @@ sub create {
         ### against 0.2607 on 26/1/2005
         unless( $skiptest ) {
             my $test_output;
-            eval { _capture ( sub { $mb->dispatch('test', %buildflags) }, \$test_output, \$test_output ) };
-            msg( $test_output, $verbose );
+            eval { _capture ( sub { $mb->dispatch('test', %buildflags) }, $verbose, \$test_output ) };
+            msg( $test_output, 0 );
             if( $@ ) {
                 error(loc("Could not run '%1': %2", 'Build test', "$@"));
 
@@ -641,8 +641,8 @@ sub install {
         my %buildflags = $dist->_buildflags_as_hash($buildflags);
 
         my $install_output;
-        eval { _capture ( sub { $mb->dispatch('install', %buildflags) }, \$install_output, \$install_output ) };
-        msg( $install_output, $verbose );
+        eval { _capture ( sub { $mb->dispatch('install', %buildflags) }, $verbose, \$install_output ) };
+        msg( $install_output, 0 );
         if( $@ ) {
             error(loc("Could not run '%1': %2", 'Build install', "$@"));
             $fail++;
@@ -728,41 +728,23 @@ sub dist_dir {
     return $distdir;
 }    
 
+
 sub _capture (&@) { ## no critic
-    my ($code, $output, $error, $output_file, $error_file) = @_;
-
-
-    # if either $output or $error are defined, then we need a variable for 
-    # results; otherwise we only capture to files and don't waste memory
-    if ( defined $output || defined $error ) {
-      for ($output, $error) {
-          $_ = \do { my $s; $s = ''} unless ref $_;
-          $$_ = '' if $_ != \undef && !defined($$_);
-      }
-    }
-
-    # merge if same refs for $output and $error or if both are undef -- 
-    # i.e. capture \&foo, undef, undef, $merged_file
-    # this means capturing into separate files *requires* at least one
-    # capture variable
-    my $should_merge = 
-      (defined $error && defined $output && $output == $error) || 
-      ( !defined $output && !defined $error ) || 
-      0;
+    my ($code, $verbose, $output) = @_;
 
     my ($capture_out, $capture_err);
 
-    # undef means capture anonymously; anything other than \undef means 
+    my $should_merge = 1;
+
+    # undef means capture anonymously; anything other than \undef means
     # capture to that ref; \undef means skip capture
-    if ( !defined $output || $output != \undef ) { 
+    if ( !defined $output || $output != \undef ) {
         $capture_out = CPANPLUS::Dist::Build::_proxy->new(
-            'STDOUT', $output, undef, $output_file
+            $verbose, $output,
         );
-    }
-    if ( !defined $error || $error != \undef ) { 
-        my $capture_err = CPANPLUS::Dist::Build::_proxy->new(
-            'STDERR', $error, ($should_merge ? 'STDOUT' : undef), $error_file
-        );
+#        my $capture_err = CPANPLUS::Dist::Build::_proxy->new(
+#            'STDERR', $verbose, $output, ($should_merge ? 'STDOUT' : undef), undef
+#        );
     }
 
     # now that output capture is setup, call the subroutine
@@ -780,59 +762,66 @@ sub _is_wperl { $^O eq 'MSWin32' && basename($^X) eq 'wperl.exe' }
 
 sub new {
     my $class = shift;
-    my ($orig_fh, $capture_var, $merge_fh, $capture_file) = @_;
-    $orig_fh       = qualify($orig_fh);         # e.g. main::STDOUT
-    my $fhref = qualify_to_ref($orig_fh);  # e.g. \*STDOUT
+    my ($verbose, $capture_var) = @_;
+    my $stdout = qualify('STDOUT');
+    my $stderr = qualify('STDERR');
+    my $out = qualify_to_ref($stdout);
+    my $err = qualify_to_ref($stderr);
 
     # Duplicate the filehandle
-    my $saved_fh;
+    my ($saved_out,$saved_err);
     {
         no strict 'refs'; ## no critic - needed for 5.005
-        if ( defined fileno($orig_fh) && ! _is_wperl() ) {
-            $saved_fh = gensym;
-            open $saved_fh, ">&$orig_fh" or croak "Can't redirect <$orig_fh> - $!";
+        if ( defined fileno($stdout) && ! _is_wperl() ) {
+            $saved_out = gensym;
+            open $saved_out, ">&$stdout" or croak "Can't redirect <$stdout> - $!";
+        }
+        if ( defined fileno($stderr) && ! _is_wperl() ) {
+            $saved_err = gensym;
+            open $saved_err, ">&$stderr" or croak "Can't redirect <$stderr> - $!";
         }
     }
 
     # Create replacement filehandle if not merging
     my ($newio_fh, $newio_file);
-    if ( ! $merge_fh ) {
-        $newio_fh = gensym;
-        if ($capture_file) {
-            $newio_file = $capture_file;
-        } else {
-            (undef, $newio_file) = tempfile;
-        }
-        open $newio_fh, "+>$newio_file" or croak "Can't write temp file for $orig_fh - $!";
-    }
-    else {
-        $newio_fh = qualify($merge_fh);
-    }
+    $newio_fh = gensym;
+    (undef, $newio_file) = tempfile;
+    open $newio_fh, "+>$newio_file" or croak "Can't write temp file for capture - $!";
 
     # Redirect (or merge)
     {
         no strict 'refs'; ## no critic -- needed for 5.005
-        open $fhref, ">&".fileno($newio_fh) or croak "Can't redirect $orig_fh - $!";
+	tie *$out, 'CPANPLUS::Dist::Build::CAPTURE_TEE', ( $verbose ? $saved_out : () ), $newio_fh;
+	tie *$err, 'CPANPLUS::Dist::Build::CAPTURE_TEE', ( $verbose ? $saved_err : () ), $newio_fh;
     }
 
-    bless [$$, $orig_fh, $saved_fh, $capture_var, $newio_fh, $newio_file, $capture_file], $class;
+    bless [$$, $stdout, $stderr, $saved_out, $saved_err, $capture_var, $newio_fh, $newio_file], $class;
 }
 
 sub DESTROY {
     my $self = shift;
 
-    my ($pid, $orig_fh, $saved_fh, $capture_var, $newio_fh, 
-      $newio_file, $capture_file) = @$self;
+    my ($pid, $stdout, $stderr, $saved_out, $saved_err, $capture_var, $newio_fh,
+      $newio_file) = @$self;
     return unless $pid eq $$; # only cleanup in the process that is capturing
 
     # restore the original filehandle
-    my $fh_ref = Symbol::qualify_to_ref($orig_fh);
-    select((select ($fh_ref), $|=1)[0]);
-    if (defined $saved_fh) {
-        open $fh_ref, ">&". fileno($saved_fh) or croak "Can't restore $orig_fh - $!";
+    my $out = Symbol::qualify_to_ref($stdout);
+    my $err = Symbol::qualify_to_ref($stderr);
+    select((select ($out), $|=1)[0]);
+    select((select ($err), $|=1)[0]);
+    if (defined $saved_out) {
+	untie *$out;
     }
     else {
-        close $fh_ref;
+        close $out;
+    }
+
+    if (defined $saved_err) {
+	untie *$err;
+    }
+    else {
+        close $err;
     }
 
     # transfer captured data to the scalar reference if we didn't merge
@@ -841,7 +830,7 @@ sub DESTROY {
         # some versions of perl complain about reading from fd 1 or 2
         # which could happen if STDOUT and STDERR were closed when $newio
         # was opened, so we just squelch warnings here and continue
-        local $^W; 
+        local $^W;
         seek $newio_fh, 0, 0;
         $$capture_var = do {local $/; <$newio_fh>};
     }
@@ -849,8 +838,41 @@ sub DESTROY {
 
     # Cleanup
     return unless defined $newio_file && -e $newio_file;
-    return if $capture_file; # the "temp" file was explicitly named
     unlink $newio_file or carp "Couldn't remove temp file '$newio_file' - $!";
+}
+
+package CPANPLUS::Dist::Build::CAPTURE_TEE;
+use strict;
+use warnings;
+
+sub TIEHANDLE {
+    my $class = shift;
+    bless [ @_ ], $class;
+}
+
+sub PRINT {
+    my $self = shift;
+    my $ret = 1;
+    foreach my $fh (@$self) { undef $ret unless print $fh @_ }
+    return $ret;
+}
+
+sub PRINTF {
+    my $self = shift;
+    my $fmt = shift;
+    my $ret = 1;
+    foreach my $fh (@$self) { undef $ret unless printf $fh $fmt, @_ }
+    return $ret;
+}
+
+sub FILENO {
+    my $self = shift;
+    return fileno $self;
+}
+
+sub OPEN {
+    my $self = shift;
+    return 1;
 }
 
 =head1 KNOWN ISSUES
@@ -904,3 +926,4 @@ terms as Perl itself.
 # indent-tabs-mode: nil
 # End:
 # vim: expandtab shiftwidth=4:
+

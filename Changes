@@ -1,5 +1,7 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
+0.06_02 - 
+
  - Fixed some issues with test output not appearing in CPAN Tester
    reports. [Chris Williams]
 

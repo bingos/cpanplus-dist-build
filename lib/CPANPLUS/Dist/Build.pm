@@ -486,15 +486,27 @@ sub create {
             last RUN;
         }
 
-        my $build_output;
-        eval { _capture ( sub { $mb->dispatch('build', %buildflags) }, $verbose, \$build_output ) };
-        msg( $build_output, 0 );
+#        my $build_output;
+#        eval { _capture ( sub { $mb->dispatch('build', %buildflags) }, $verbose, \$build_output ) };
+#        msg( $build_output, 0 );
 
-        if( $@ ) {
-            error(loc("Could not run '%1': %2", 'Build', "$@"));
+#        if( $@ ) {
+#            error(loc("Could not run '%1': %2", 'Build', "$@"));
+#            $dist->status->build(0);
+#            $fail++; last RUN;
+#        }
+        my $captured;
+
+        unless ( scalar run(    command => [$perl, BUILD->($dir), $buildflags],
+                                buffer  => \$captured,
+                                verbose => $verbose ) 
+        ) {
+            error( loc( "Build failed: %1 %2", $!, $captured ) );
             $dist->status->build(0);
             $fail++; last RUN;
         }
+
+        msg( $captured, 0 );
 
         $dist->status->build(1);
 
@@ -508,10 +520,16 @@ sub create {
         ### against 0.2607 on 26/1/2005
         unless( $skiptest ) {
             my $test_output;
-            eval { _capture ( sub { $mb->dispatch('test', %buildflags) }, $verbose, \$test_output ) };
-            msg( $test_output, 0 );
-            if( $@ ) {
-                error(loc("Could not run '%1': %2", 'Build test', "$@"));
+#            eval { _capture ( sub { $mb->dispatch('test', %buildflags) }, $verbose, \$test_output ) };
+#            msg( $test_output, 0 );
+            my $flag    = ON_VMS ? '"test"' : 'test';
+            my $cmd     = [$perl, BUILD->($dir), $flag, $buildflags];
+            unless ( scalar run(    command => $cmd,
+                                    buffer  => \$test_output,
+                                    verbose => $verbose ) 
+            ) {
+#                error(loc("Could not run '%1': %2", 'Build test', "$@"));
+                error( loc( "Build test failed: %1 %2", $!, $test_output ) );
 
                 ### mark specifically *test* failure.. so we dont
                 ### send success on force...
@@ -524,10 +542,13 @@ sub create {
                     $fail++; last RUN;
                 }
 
-            } else {
+            } 
+            else {
+                msg( $test_output, 0 );
                 $dist->status->test(1);
             }
-        } else {
+        } 
+        else {
             msg(loc("Tests skipped"), $verbose);
         }
     }
@@ -641,11 +662,21 @@ sub install {
         my %buildflags = $dist->_buildflags_as_hash($buildflags);
 
         my $install_output;
-        eval { _capture ( sub { $mb->dispatch('install', %buildflags) }, $verbose, \$install_output ) };
-        msg( $install_output, 0 );
-        if( $@ ) {
-            error(loc("Could not run '%1': %2", 'Build install', "$@"));
+#        eval { _capture ( sub { $mb->dispatch('install', %buildflags) }, $verbose, \$install_output ) };
+#        msg( $install_output, 0 );
+#        if( $@ ) {
+        my $flag    = ON_VMS ? '"install"' : 'install';
+        my $cmd     = [$perl, BUILD->($dir), $flag, $buildflags];
+        unless( scalar run( command => $cmd,
+                            buffer  => \$install_output,
+                            verbose => $verbose )
+        ) {
+#            error(loc("Could not run '%1': %2", 'Build install', "$@"));
+            error(loc("Could not run '%1': %2", 'Build install', $install_output));
             $fail++;
+        }
+        else {
+            msg( $install_output, 0 );
         }
     }
 

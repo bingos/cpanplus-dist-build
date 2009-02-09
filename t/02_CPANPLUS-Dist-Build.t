@@ -220,7 +220,7 @@ while( my($path,$need_cc) = each %Map ) {
     ### also quell the warning for print() on unopened fh...
     my $rv = do { 
                 local $^W;
-                local *STDERR; 
+#                local *STDERR; 
                 $clone->prepare( force => 1 ) 
             };
     ok( !$rv,                   '   $mod->prepare failed' );

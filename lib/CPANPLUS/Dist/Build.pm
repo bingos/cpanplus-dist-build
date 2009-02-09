@@ -21,6 +21,7 @@ use CPANPLUS::Error;
 use Config;
 use FileHandle;
 use Cwd;
+use version;
 
 use IPC::Cmd                    qw[run];
 use Params::Check               qw[check];
@@ -29,7 +30,7 @@ use Locale::Maketext::Simple    Class => 'CPANPLUS', Style => 'gettext';
 
 local $Params::Check::VERBOSE = 1;
 
-$VERSION = '0.06_02';
+$VERSION = '0.06_03';
 
 =pod
 
@@ -275,22 +276,23 @@ sub prepare {
         # done at a much higher level).
         my $prep_output;
 
-        my $mb = eval { 
-            my $env = 'ENV_CPANPLUS_IS_EXECUTING';
-            local $ENV{$env} = BUILD_PL->( $dir );
-            _capture ( sub { Module::Build->new_from_context(%buildflags) }, $verbose, \$prep_output )
-        };
+        my $env = 'ENV_CPANPLUS_IS_EXECUTING';
+        local $ENV{$env} = BUILD_PL->( $dir );
 
-        msg( $prep_output, 0 );
-
-        if( !$mb or $@ ) {
-            error(loc("Could not create Module::Build object: %1","$@"));
+        unless ( scalar run(    command => [$perl, BUILD_PL->($dir), $buildflags],
+                                buffer  => \$prep_output,
+                                verbose => $verbose ) 
+        ) {
+            error( loc( "Build.PL failed: %1", $prep_output ) );
             $fail++; last RUN;
         }
 
-        $dist->status->_mb_object( $mb );
+        msg( $prep_output, 0 );
 
-        $self->status->prereqs( $dist->_find_prereqs( verbose => $verbose ) );
+        $self->status->prereqs( $dist->_find_prereqs( verbose => $verbose, 
+                                                      dir => $dir, 
+                                                      perl => $perl,
+                                                      buildflags => $buildflags ) );
 
     }
     
@@ -319,15 +321,63 @@ sub prepare {
 
 sub _find_prereqs {
     my $dist = shift;
-    my $mb   = $dist->status->_mb_object;
     my $self = $dist->parent;
     my $cb   = $self->parent;
+    my $conf = $cb->configure_object;
+    my %hash = @_;
+
+    my ($verbose, $dir, $buildflags, $perl);
+    my $tmpl = {
+        verbose => { default => $conf->get_conf('verbose'), store => \$verbose },
+        dir     => { default => $self->status->extract, store => \$dir },
+        perl    => { default => $^X, store => \$perl },
+        buildflags => { default => $conf->get_conf('buildflags'),
+                        store   => \$buildflags },
+    };
+    
+    my $args = check( $tmpl, \%hash ) or return;
 
     my $prereqs = {};
-    foreach my $type ('requires', 'build_requires') {
-      my $p = $mb->$type() || {};
-      $prereqs->{$_} = $p->{$_} foreach keys %$p;
+
+    my $safe_ver = version->new('0.31_03');
+
+    my $content;
+
+    if ( version->new( $Module::Build::VERSION ) >= $safe_ver ) {
+        # Use the new Build action 'prereq_data'
+        
+        unless ( scalar run(    command => [$perl, BUILD->($dir), 'prereq_data', $buildflags],
+                                buffer  => \$content,
+                                verbose => 0 ) 
+        ) {
+            error( loc( "Build 'prereq_data' failed: %1 %2", $!, $content ) );
+            return;
+        }
+
     }
+    else {
+        my $file = File::Spec->catfile( $dir, '_build', 'prereqs' );
+        return unless -f $file;
+
+        my $fh = FileHandle->new();
+
+        unless( $fh->open( $file ) ) {
+           error( loc( "Cannot open '%1': %2", $file, $! ) );
+           return;
+        }
+        
+        $content = do { local $/; <$fh> };
+    }
+
+    my $bphash = eval $content;
+    return unless $bphash and ref $bphash eq 'HASH';
+    foreach my $type ('requires', 'build_requires') {
+       next unless $bphash->{$type} and ref $bphash->{$type} eq 'HASH';
+       $prereqs->{$_} = $bphash->{$type}->{$_} for keys %{ $bphash->{$type} };
+    }
+
+    # Temporary fix
+    delete $prereqs->{'perl'};
 
     ### allows for a user defined callback to filter the prerequisite
     ### list as they see fit, to remove (or add) any prereqs they see
@@ -486,22 +536,13 @@ sub create {
             last RUN;
         }
 
-#        my $build_output;
-#        eval { _capture ( sub { $mb->dispatch('build', %buildflags) }, $verbose, \$build_output ) };
-#        msg( $build_output, 0 );
-
-#        if( $@ ) {
-#            error(loc("Could not run '%1': %2", 'Build', "$@"));
-#            $dist->status->build(0);
-#            $fail++; last RUN;
-#        }
         my $captured;
 
         unless ( scalar run(    command => [$perl, BUILD->($dir), $buildflags],
                                 buffer  => \$captured,
                                 verbose => $verbose ) 
         ) {
-            error( loc( "Build failed: %1 %2", $!, $captured ) );
+            error( loc( "MAKE failed:\n%1", $captured ) );
             $dist->status->build(0);
             $fail++; last RUN;
         }
@@ -511,25 +552,23 @@ sub create {
         $dist->status->build(1);
 
         ### add this directory to your lib ###
-        $cb->_add_to_includepath(
-            directories => [ BLIB_LIBDIR->( $self->status->extract ) ]
-        );
+        #$cb->_add_to_includepath(
+        #    directories => [ BLIB_LIBDIR->( $self->status->extract ) ]
+        #);
+        $self->add_to_includepath();
 
         ### this buffer will not include what tests failed due to a 
         ### M::B/Test::Harness bug. Reported as #9793 with patch 
         ### against 0.2607 on 26/1/2005
         unless( $skiptest ) {
             my $test_output;
-#            eval { _capture ( sub { $mb->dispatch('test', %buildflags) }, $verbose, \$test_output ) };
-#            msg( $test_output, 0 );
             my $flag    = ON_VMS ? '"test"' : 'test';
             my $cmd     = [$perl, BUILD->($dir), $flag, $buildflags];
             unless ( scalar run(    command => $cmd,
                                     buffer  => \$test_output,
                                     verbose => $verbose ) 
             ) {
-#                error(loc("Could not run '%1': %2", 'Build test', "$@"));
-                error( loc( "Build test failed: %1 %2", $!, $test_output ) );
+                error( loc( "MAKE TEST failed:\n%1 ", $test_output ) );
 
                 ### mark specifically *test* failure.. so we dont
                 ### send success on force...
@@ -662,16 +701,12 @@ sub install {
         my %buildflags = $dist->_buildflags_as_hash($buildflags);
 
         my $install_output;
-#        eval { _capture ( sub { $mb->dispatch('install', %buildflags) }, $verbose, \$install_output ) };
-#        msg( $install_output, 0 );
-#        if( $@ ) {
         my $flag    = ON_VMS ? '"install"' : 'install';
         my $cmd     = [$perl, BUILD->($dir), $flag, $buildflags];
         unless( scalar run( command => $cmd,
                             buffer  => \$install_output,
                             verbose => $verbose )
         ) {
-#            error(loc("Could not run '%1': %2", 'Build install', "$@"));
             error(loc("Could not run '%1': %2", 'Build install', $install_output));
             $fail++;
         }
@@ -759,153 +794,6 @@ sub dist_dir {
     return $distdir;
 }    
 
-
-sub _capture (&@) { ## no critic
-    my ($code, $verbose, $output) = @_;
-
-    my ($capture_out, $capture_err);
-
-    my $should_merge = 1;
-
-    # undef means capture anonymously; anything other than \undef means
-    # capture to that ref; \undef means skip capture
-    if ( !defined $output || $output != \undef ) {
-        $capture_out = CPANPLUS::Dist::Build::_proxy->new(
-            $verbose, $output,
-        );
-#        my $capture_err = CPANPLUS::Dist::Build::_proxy->new(
-#            'STDERR', $verbose, $output, ($should_merge ? 'STDOUT' : undef), undef
-#        );
-    }
-
-    # now that output capture is setup, call the subroutine
-    # results get read when IO::CaptureOutput::_proxy objects go out of scope
-    &$code();
-}
-
-package CPANPLUS::Dist::Build::_proxy;
-use File::Temp 'tempfile';
-use File::Basename qw/basename/;
-use Symbol qw/gensym qualify qualify_to_ref/;
-use Carp;
-
-sub _is_wperl { $^O eq 'MSWin32' && basename($^X) eq 'wperl.exe' }
-
-sub new {
-    my $class = shift;
-    my ($verbose, $capture_var) = @_;
-    my $stdout = qualify('STDOUT');
-    my $stderr = qualify('STDERR');
-    my $out = qualify_to_ref($stdout);
-    my $err = qualify_to_ref($stderr);
-
-    # Duplicate the filehandle
-    my ($saved_out,$saved_err);
-    {
-        no strict 'refs'; ## no critic - needed for 5.005
-        if ( defined fileno($stdout) && ! _is_wperl() ) {
-            $saved_out = gensym;
-            open $saved_out, ">&$stdout" or croak "Can't redirect <$stdout> - $!";
-        }
-        if ( defined fileno($stderr) && ! _is_wperl() ) {
-            $saved_err = gensym;
-            open $saved_err, ">&$stderr" or croak "Can't redirect <$stderr> - $!";
-        }
-    }
-
-    # Create replacement filehandle if not merging
-    my ($newio_fh, $newio_file);
-    $newio_fh = gensym;
-    (undef, $newio_file) = tempfile;
-    open $newio_fh, "+>$newio_file" or croak "Can't write temp file for capture - $!";
-
-    # Redirect (or merge)
-    {
-        no strict 'refs'; ## no critic -- needed for 5.005
-	tie *$out, 'CPANPLUS::Dist::Build::CAPTURE_TEE', ( $verbose ? $saved_out : () ), $newio_fh;
-	tie *$err, 'CPANPLUS::Dist::Build::CAPTURE_TEE', ( $verbose ? $saved_err : () ), $newio_fh;
-    }
-
-    bless [$$, $stdout, $stderr, $saved_out, $saved_err, $capture_var, $newio_fh, $newio_file], $class;
-}
-
-sub DESTROY {
-    my $self = shift;
-
-    my ($pid, $stdout, $stderr, $saved_out, $saved_err, $capture_var, $newio_fh,
-      $newio_file) = @$self;
-    return unless $pid eq $$; # only cleanup in the process that is capturing
-
-    # restore the original filehandle
-    my $out = Symbol::qualify_to_ref($stdout);
-    my $err = Symbol::qualify_to_ref($stderr);
-    select((select ($out), $|=1)[0]);
-    select((select ($err), $|=1)[0]);
-    if (defined $saved_out) {
-	untie *$out;
-    }
-    else {
-        close $out;
-    }
-
-    if (defined $saved_err) {
-	untie *$err;
-    }
-    else {
-        close $err;
-    }
-
-    # transfer captured data to the scalar reference if we didn't merge
-    # $newio_file is undef if this file handle is merged to another
-    if (ref $capture_var && $newio_file) {
-        # some versions of perl complain about reading from fd 1 or 2
-        # which could happen if STDOUT and STDERR were closed when $newio
-        # was opened, so we just squelch warnings here and continue
-        local $^W;
-        seek $newio_fh, 0, 0;
-        $$capture_var = do {local $/; <$newio_fh>};
-    }
-    close $newio_fh if $newio_file;
-
-    # Cleanup
-    return unless defined $newio_file && -e $newio_file;
-    unlink $newio_file or carp "Couldn't remove temp file '$newio_file' - $!";
-}
-
-package CPANPLUS::Dist::Build::CAPTURE_TEE;
-use strict;
-use warnings;
-
-sub TIEHANDLE {
-    my $class = shift;
-    bless [ @_ ], $class;
-}
-
-sub PRINT {
-    my $self = shift;
-    my $ret = 1;
-    foreach my $fh (@$self) { undef $ret unless print $fh @_ }
-    return $ret;
-}
-
-sub PRINTF {
-    my $self = shift;
-    my $fmt = shift;
-    my $ret = 1;
-    foreach my $fh (@$self) { undef $ret unless printf $fh $fmt, @_ }
-    return $ret;
-}
-
-sub FILENO {
-    my $self = shift;
-    return fileno $self;
-}
-
-sub OPEN {
-    my $self = shift;
-    return 1;
-}
-
 =head1 KNOWN ISSUES
 
 Below are some of the known issues with Module::Build, that we hope 
@@ -935,6 +823,8 @@ like C<testers.cpan.org>.
 
 Originally by Jos Boumans E<lt>kane@cpan.orgE<gt>.  Brought to working
 condition and currently maintained by Ken Williams E<lt>kwilliams@cpan.orgE<gt>.
+
+Other hackery by Chris 'BinGOs' Williams ( no relation ). E<lt>bingos@cpan.orgE<gt>.
 
 =head1 COPYRIGHT
 

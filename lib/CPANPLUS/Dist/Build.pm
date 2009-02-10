@@ -552,9 +552,9 @@ sub create {
         $dist->status->build(1);
 
         ### add this directory to your lib ###
-        #$cb->_add_to_includepath(
-        #    directories => [ BLIB_LIBDIR->( $self->status->extract ) ]
-        #);
+#        $cb->_add_to_includepath(
+#            directories => [ BLIB_LIBDIR->( $self->status->extract ) ]
+#        );
         $self->add_to_includepath();
 
         ### this buffer will not include what tests failed due to a 

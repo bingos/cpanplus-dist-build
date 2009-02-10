@@ -8,7 +8,7 @@ WriteMakefile (
     clean           => { FILES => 't/dummy-cpanplus t/dummy-perl/lib/perl5' },
     PREREQ_PM       => { 
                         'Test::More'                => 0, 
-                        'CPANPLUS'                  => '0.80',
+                        'CPANPLUS'                  => '0.84',
                         'Locale::Maketext::Simple'  => 0,
                         'Params::Check'             => '0.22',
                         'IPC::Cmd'                  => '0.23',

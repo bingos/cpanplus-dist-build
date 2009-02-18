@@ -25,6 +25,13 @@ $SIG{__WARN__} = sub {warn @_ unless @_ && $_[0] =~ /redefined|isn't numeric/};
 use ExtUtils::Packlist;
 use ExtUtils::Installed;
 
+my $Have_C_support;
+
+eval {
+  require Module::Build::ConfigData;
+  $Have_C_support = Module::Build::ConfigData->feature('C_support');
+};
+
 my $Class   = 'CPANPLUS::Dist::Build';
 my $Utils   = 'CPANPLUS::Internals::Utils';
 my $Have_CC =  can_run($Config{'cc'} )? 1 : 0;
@@ -133,7 +140,8 @@ while( my($path,$need_cc) = each %Map ) {
              "-- skipping compile tests", 5) if $need_cc && !$Have_CC;
         skip("Module::Build is not compiled with C support ".
              "-- skipping compile tests", 5) 
-             unless Module::Build->_mb_feature('C_support');
+    #         unless Module::Build->new( dist_name => 'DUMMY', dist_version => '0.01' )->_mb_feature('C_support');
+             unless $Have_C_support;
 
         ok( $mod->create( ),    "Creating module" );
         ok( $mod->status->dist_cpan->status->created,
@@ -218,6 +226,7 @@ while( my($path,$need_cc) = each %Map ) {
     ### so we dont spam the result through the test -- this is expected
     ### behaviour after all.
     ### also quell the warning for print() on unopened fh...
+    diag("The following ERROR may be ignored:\n\n");
     my $rv = do { 
                 local $^W;
 #                local *STDERR; 

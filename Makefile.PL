@@ -1,24 +1,21 @@
-use ExtUtils::MakeMaker;
 use strict;
-
-WriteMakefile (
-    NAME            => 'CPANPLUS::Dist::Build',
-    VERSION_FROM    => 'lib/CPANPLUS/Dist/Build.pm', # finds $VERSION
-    dist            => { COMPRESS => 'gzip -9f', SUFFIX => 'gz' },
-    clean           => { FILES => 't/dummy-cpanplus t/dummy-perl/lib/perl5' },
-    PREREQ_PM       => { 
-                        'Test::More'                => 0, 
-                        'CPANPLUS'                  => '0.84',
-                        'Locale::Maketext::Simple'  => 0,
-                        'Params::Check'             => '0.22',
-                        'IPC::Cmd'                  => '0.23',
-                        'Module::Load::Conditional' => '0.06',
-                        'Module::Pluggable'         => '2.4',
-                        'Module::Build'             => '0.28',
-                        'File::Spec'                => 0,
-                    },
-    AUTHOR          => 'Jos Boumans <kane[at]cpan.org>, Ken Williams <kwilliams@cpan.org>',
-    ABSTRACT        => 'CPANPLUS plugin to install packages that use Build.PL',
-);     
-
-
+use inc::Module::Install;
+name 'CPANPLUS-Dist-Build';
+author 'Jos Boumans <kane[at]cpan.org>, Ken Williams <kwilliams@cpan.org>';
+version_from 'lib/CPANPLUS/Dist/Build.pm';
+abstract 'CPANPLUS plugin to install packages that use Build.PL';
+perl_version '5.006';
+license 'perl';
+build_requires 'Test::More' 	     => 0.47;
+requires 'Test::Harness'	     => '3.15';
+requires 'CPANPLUS'                  => '0.84';
+requires 'Locale::Maketext::Simple'  => 0;
+requires 'Params::Check'             => '0.26';
+requires 'IPC::Cmd'                  => '0.42';
+requires 'Module::Load'		     => '0.16';
+requires 'Module::Load::Conditional' => '0.30';
+requires 'Module::Pluggable'         => '3.8';
+requires 'Module::Build'             => '0.28';
+requires 'File::Spec'                => 0;
+clean_files 't/dummy-cpanplus t/dummy-perl/lib/perl5';
+WriteAll();

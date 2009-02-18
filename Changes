@@ -1,8 +1,10 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
-0.06_XX -
+0.06_04 Wed Feb 18 16:50:08 GMT 2009
 
  - bumped CPANPLUS prerequisite to 0.84
+ - bumped all required versions, added Test::Harness 3.15
+ - Fixed warnings in tests and added diag() to ignore the [ERROR]
 
 0.06_03	Mon Feb  9 16:31:10 GMT 2009
 

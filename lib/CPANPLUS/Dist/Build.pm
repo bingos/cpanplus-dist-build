@@ -30,13 +30,13 @@ use Locale::Maketext::Simple    Class => 'CPANPLUS', Style => 'gettext';
 
 local $Params::Check::VERBOSE = 1;
 
-$VERSION = '0.06_03';
+$VERSION = '0.06_04';
 
 =pod
 
 =head1 NAME
 
-CPANPLUS::Dist::Build
+CPANPLUS::Dist::Build - CPANPLUS plugin to install packages that use Build.PL
 
 =head1 SYNOPSIS
 

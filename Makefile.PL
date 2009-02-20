@@ -7,7 +7,7 @@ abstract 'CPANPLUS plugin to install packages that use Build.PL';
 perl_version '5.006';
 license 'perl';
 build_requires 'Test::More' 	     => 0.47;
-requires 'Test::Harness'	     => '3.15';
+requires 'Test::Harness'	     => '3.16';
 requires 'CPANPLUS'                  => '0.84';
 requires 'Locale::Maketext::Simple'  => 0;
 requires 'Params::Check'             => '0.26';

@@ -222,16 +222,15 @@ while( my($path,$need_cc) = each %Map ) {
     ### clear errors    
     CPANPLUS::Error->flush;
 
-    ### since we're die'ing in the Build.PL, do a local *STDERR,
-    ### so we dont spam the result through the test -- this is expected
-    ### behaviour after all.
-    ### also quell the warning for print() on unopened fh...
-    diag("The following ERROR may be ignored:\n\n");
-    my $rv = do { 
-                local $^W;
-#                local *STDERR; 
-                $clone->prepare( force => 1 ) 
-            };
+    ### since we're die'ing in the Build.PL, localize 
+    ### $CPANPLUS::Error::ERROR_FH and redirect to devnull
+    ### so we dont spam the result through the test 
+    ### as this is expected behaviour after all.
+    my $rv = do {
+        local *CPANPLUS::Error::ERROR_FH;
+        open $CPANPLUS::Error::ERROR_FH, ">", File::Spec->devnull;
+        $clone->prepare( force => 1 ) 
+    };
     ok( !$rv,                   '   $mod->prepare failed' );
 
     my $re = quotemeta( $build_pl );

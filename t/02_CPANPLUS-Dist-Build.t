@@ -25,13 +25,6 @@ $SIG{__WARN__} = sub {warn @_ unless @_ && $_[0] =~ /redefined|isn't numeric/};
 use ExtUtils::Packlist;
 use ExtUtils::Installed;
 
-my $Have_C_support;
-
-eval {
-  require Module::Build::ConfigData;
-  $Have_C_support = Module::Build::ConfigData->feature('C_support');
-};
-
 my $Class   = 'CPANPLUS::Dist::Build';
 my $Utils   = 'CPANPLUS::Internals::Utils';
 my $Have_CC =  can_run($Config{'cc'} )? 1 : 0;
@@ -140,8 +133,8 @@ while( my($path,$need_cc) = each %Map ) {
              "-- skipping compile tests", 5) if $need_cc && !$Have_CC;
         skip("Module::Build is not compiled with C support ".
              "-- skipping compile tests", 5) 
-    #         unless Module::Build->new( dist_name => 'DUMMY', dist_version => '0.01' )->_mb_feature('C_support');
-             unless $Have_C_support;
+             unless eval { require Module::Build::ConfigData;
+             Module::Build::ConfigData->feature('C_support') };
 
         ok( $mod->create( ),    "Creating module" );
         ok( $mod->status->dist_cpan->status->created,

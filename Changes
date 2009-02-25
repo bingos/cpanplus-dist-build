@@ -1,5 +1,10 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
+0.06_05 Wed Feb 25 22:24:50 GMT 2009
+
+ - Brought the test fixes into line with blead [rt #42670]
+ - suppress [ERROR] messages in tests (dagolden)
+
 0.06_04 Wed Feb 18 16:50:08 GMT 2009
 
  - bumped CPANPLUS prerequisite to 0.84

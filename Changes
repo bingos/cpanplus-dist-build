@@ -1,5 +1,9 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
+0.06_06
+
+  - bumped Module::Build prerequisite to 0.32
+
 0.06_05 Wed Feb 25 22:24:50 GMT 2009
 
  - Brought the test fixes into line with blead [rt #42670]

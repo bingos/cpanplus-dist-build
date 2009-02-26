@@ -1,6 +1,7 @@
 package CPANPLUS::Dist::Build;
 
 use strict;
+use warnings;
 use vars    qw[@ISA $STATUS $VERSION];
 @ISA =      qw[CPANPLUS::Dist];
 
@@ -30,7 +31,7 @@ use Locale::Maketext::Simple    Class => 'CPANPLUS', Style => 'gettext';
 
 local $Params::Check::VERBOSE = 1;
 
-$VERSION = '0.06_06';
+$VERSION = '0.07';
 
 =pod
 
@@ -45,7 +46,7 @@ CPANPLUS::Dist::Build - CPANPLUS plugin to install packages that use Build.PL
                                 module  => $modobj,
                             );
                             
-    $build->prepare;    # runs Module::Build->new_from_context;                            
+    $build->prepare;    # runs Build.PL                            
     $build->create;     # runs build && build test
     $build->install;    # runs build install
 
@@ -65,11 +66,11 @@ just C<Do The Right Thing> when it's loaded.
 
 =over 4
 
-=item parent()
+=item C<parent()>
 
 Returns the C<CPANPLUS::Module> object that parented this object.
 
-=item status()
+=item C<status()>
 
 Returns the C<Object::Accessor> object that keeps the status for
 this module.
@@ -83,35 +84,35 @@ All accessors can be accessed as follows:
 
 =over 4
 
-=item build_pl ()
+=item C<build_pl ()>
 
 Location of the Build file.
 Set to 0 explicitly if something went wrong.
 
-=item build ()
+=item C<build ()>
 
 BOOL indicating if the C<Build> command was successful.
 
-=item test ()
+=item C<test ()>
 
 BOOL indicating if the C<Build test> command was successful.
 
-=item prepared ()
+=item C<prepared ()>
 
 BOOL indicating if the C<prepare> call exited succesfully
 This gets set after C<perl Build.PL>
 
-=item distdir ()
+=item C<distdir ()>
 
 Full path to the directory in which the C<prepare> call took place,
 set after a call to C<prepare>. 
 
-=item created ()
+=item C<created ()>
 
 BOOL indicating if the C<create> call exited succesfully. This gets
 set after C<Build> and C<Build test>.
 
-=item installed ()
+=item C<installed ()>
 
 BOOL indicating if the module was installed. This gets set after
 C<Build install> exits successfully.
@@ -120,24 +121,19 @@ C<Build install> exits successfully.
 
 BOOL indicating if the module was uninstalled properly.
 
-=item _create_args ()
+=item C<_create_args ()>
 
 Storage of the arguments passed to C<create> for this object. Used
 for recursive calls when satisfying prerequisites.
 
-=item _install_args ()
+=item C<_install_args ()>
 
 Storage of the arguments passed to C<install> for this object. Used
 for recursive calls when satisfying prerequisites.
 
-=item _mb_object ()
-
-Storage of the C<Module::Build> object we used for this installation.
-
 =back
 
 =cut
-
 
 =head1 METHODS
 
@@ -189,12 +185,11 @@ sub init {
 
 =head2 $bool = $dist->prepare([perl => '/path/to/perl', buildflags => 'EXTRA=FLAGS', force => BOOL, verbose => BOOL])
 
-C<prepare> prepares a distribution, running C<Module::Build>'s 
-C<new_from_context> method, and establishing any prerequisites this
+C<prepare> prepares a distribution, running C<Build.PL> 
+and establishing any prerequisites this
 distribution has.
 
-When running C<< Module::Build->new_from_context >>, the environment 
-variable C<PERL5_CPANPLUS_IS_EXECUTING> will be set to the full path 
+The variable C<PERL5_CPANPLUS_IS_EXECUTING> will be set to the full path 
 of the C<Build.PL> that is being executed. This enables any code inside
 the C<Build.PL> to know that it is being installed via CPANPLUS.
 
@@ -401,7 +396,7 @@ sub _find_prereqs {
 =head2 $dist->create([perl => '/path/to/perl', buildflags => 'EXTRA=FLAGS', prereq_target => TARGET, force => BOOL, verbose => BOOL, skiptest => BOOL])
 
 C<create> preps a distribution for installation. This means it will
-run C<Build> and C<Build test>, via the C<Module::Build> API.
+run C<Build> and C<Build test>.
 This will also satisfy any prerequisites the module may have.
 
 If you set C<skiptest> to true, it will skip the C<Build test> stage.
@@ -430,7 +425,6 @@ sub create {
 
     my $cb   = $self->parent;
     my $conf = $cb->configure_object;
-    my $mb   = $dist->status->_mb_object;
     my %hash = @_;
 
     my $dir;
@@ -552,9 +546,6 @@ sub create {
         $dist->status->build(1);
 
         ### add this directory to your lib ###
-#        $cb->_add_to_includepath(
-#            directories => [ BLIB_LIBDIR->( $self->status->extract ) ]
-#        );
         $self->add_to_includepath();
 
         ### this buffer will not include what tests failed due to a 
@@ -629,7 +620,6 @@ sub install {
     ### we're also the cpan_dist, since we don't need to have anything
     ### prepared from another installer
     $dist    = $self->status->dist_cpan if $self->status->dist_cpan;
-    my $mb   = $dist->status->_mb_object;
 
     my $cb   = $self->parent;
     my $conf = $cb->configure_object;
@@ -734,99 +724,14 @@ sub _buildflags_as_hash {
     return %$argv;
 }
 
-
-sub dist_dir {
-    ### just in case you already did a create call for this module object
-    ### just via a different dist object
-    my $dist = shift;
-    my $self = $dist->parent;
-
-    ### we're also the cpan_dist, since we don't need to have anything
-    ### prepared from another installer
-    $dist    = $self->status->dist_cpan if $self->status->dist_cpan;
-    my $mb   = $dist->status->_mb_object;
-
-    my $cb   = $self->parent;
-    my $conf = $cb->configure_object;
-    my %hash = @_;
-
-    
-    my $dir;
-    unless( $dir = $self->status->extract ) {
-        error( loc( "No dir found to operate on!" ) );
-        return;
-    }
-    
-    ### chdir to work directory ###
-    my $orig = cwd();
-    unless( $cb->_chdir( dir => $dir ) ) {
-        error( loc( "Could not chdir to build directory '%1'", $dir ) );
-        return;
-    }
-
-    my $fail; my $distdir;
-    TRY: {    
-        $dist->prepare( @_ ) or (++$fail, last TRY);
-
-
-        eval { $mb->dispatch('distdir') };
-        if( $@ ) {
-            error(loc("Could not run '%1': %2", 'Build distdir', "$@"));
-            ++$fail, last TRY;
-        }
-
-        ### /path/to/Foo-Bar-1.2/Foo-Bar-1.2
-        $distdir = File::Spec->catdir( $dir, $self->package_name . '-' .
-                                                $self->package_version );
-
-        unless( -d $distdir ) {
-            error(loc("Do not know where '%1' got created", 'distdir'));
-            ++$fail, last TRY;
-        }
-    }
-
-    unless( $cb->_chdir( dir => $orig ) ) {
-        error( loc( "Could not chdir to start directory '%1'", $orig ) );
-        return;
-    }
-
-    return if $fail;
-    return $distdir;
-}    
-
-=head1 KNOWN ISSUES
-
-Below are some of the known issues with Module::Build, that we hope 
-the authors will resolve at some point, so we can make full use of
-Module::Build's power. 
-The number listed is the bug number on C<rt.cpan.org>.
-
-=over 4
-
-=item * Module::Build can not be upgraded using its own API (#13169)
-
-This is due to the fact that the Build file insists on adding a path
-to C<@INC> which force the loading of the C<not yet installed>
-Module::Build when it shells out to run it's own build procedure:
-
-=item * Module::Build does not provide access to install history (#9793)
-
-C<Module::Build> runs the create, test and install procedures in it's
-own processes, but does not provide access to any diagnostic messages of
-those processes. As an end result, we can not offer these diagnostic 
-messages when, for example, reporting automated build failures to sites
-like C<testers.cpan.org>.
-
-=back
-
 =head1 AUTHOR
 
 Originally by Jos Boumans E<lt>kane@cpan.orgE<gt>.  Brought to working
-condition and currently maintained by Ken Williams E<lt>kwilliams@cpan.orgE<gt>.
+condition by Ken Williams E<lt>kwilliams@cpan.orgE<gt>.
 
-Other hackery by Chris 'BinGOs' Williams ( no relation ). E<lt>bingos@cpan.orgE<gt>.
+Other hackery and currently maintained by Chris 'BinGOs' Williams ( no relation ). E<lt>bingos@cpan.orgE<gt>.
 
-=head1 COPYRIGHT
+=head1 LICENSE
 
 The CPAN++ interface (of which this module is a part of) is
 copyright (c) 2001, 2002, 2003, 2004, 2005 Jos Boumans E<lt>kane@cpan.orgE<gt>.

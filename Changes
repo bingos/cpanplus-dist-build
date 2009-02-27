@@ -1,6 +1,6 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
-0.07
+0.08
 
   - bumped Module::Build prerequisite to 0.32 (dagolden)
   - refactored documentation to reflect changes to code

@@ -1,13 +1,13 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
-0.08
+0.08 Sat Feb 28 07:53:52 GMT 2009
 
   - bumped Module::Build prerequisite to 0.32 (dagolden)
-  - refactored documentation to reflect changes to code
-  - removed all refs to Module::Build object
-  - added LICENSE file
-  - added documentation to ::Constants
-  - added POD and POD coverage tests
+  - refactored documentation to reflect changes to code (bingos)
+  - removed all refs to Module::Build object (bingos)
+  - added LICENSE file (bingos)
+  - added documentation to ::Constants (bingos)
+  - added POD and POD coverage tests (bingos)
 
 0.06_05 Wed Feb 25 22:24:50 GMT 2009
 
@@ -16,18 +16,18 @@ Revision history for Perl extension CPANPLUS::Dist::Build.
 
 0.06_04 Wed Feb 18 16:50:08 GMT 2009
 
- - bumped CPANPLUS prerequisite to 0.84
- - bumped all required versions, added Test::Harness 3.15
- - Fixed warnings in tests and added diag() to ignore the [ERROR]
+ - bumped CPANPLUS prerequisite to 0.84 (bingos)
+ - bumped all required versions, added Test::Harness 3.15 (bingos)
+ - Fixed warnings in tests and added diag() to ignore the [ERROR] (bingos)
 
 0.06_03	Mon Feb  9 16:31:10 GMT 2009
 
  - process separation for Build.PL, Build, test and install actions, 
-   using IPC::Cmd
+   using IPC::Cmd (bingos)
  - If M::B is version 0.31_03 or greater use 'Build prereq_data' to
    work out prereqs, otherwise fallback on poking around in _build/
-   like CPAN.pm does.
- - Resolved issues with test reports for FAILs being misgraded as UKNOWN.
+   like CPAN.pm does. (bingos)
+ - Resolved issues with test reports for FAILs being misgraded as UKNOWN. (bingos)
 
 0.06_02 - 
 

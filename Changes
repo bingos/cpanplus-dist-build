@@ -1,5 +1,9 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
+0.12 Mon Mar  2 13:33:47 GMT 2009
+
+  - Fixed the version number in ::Constants
+
 0.10 Mon Mar  2 07:36:41 GMT 2009
 
   - Added 'installdirs' directive to Makefile.PL to resolve

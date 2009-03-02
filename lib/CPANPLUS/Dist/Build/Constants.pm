@@ -9,7 +9,7 @@ BEGIN {
     require Exporter;
     use vars    qw[$VERSION @ISA @EXPORT];
   
-    $VERSION    = 0.10;
+    $VERSION    = $CPANPLUS::Dist::Build::VERSION;
     @ISA        = qw[Exporter];
     @EXPORT     = qw[ BUILD_DIR BUILD ];
 }

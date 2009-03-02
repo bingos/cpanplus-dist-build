@@ -4,6 +4,7 @@ Revision history for Perl extension CPANPLUS::Dist::Build.
 
   - Added 'installdirs' directive to Makefile.PL to resolve
     [rt #43739] (bingos)
+  - Only a version change no need to update core.
 
 0.08 Sat Feb 28 07:53:52 GMT 2009
 

@@ -366,6 +366,7 @@ sub _find_prereqs {
         $content = do { local $/; <$fh> };
     }
 
+    return unless $content;
     my $bphash = eval $content;
     return unless $bphash and ref $bphash eq 'HASH';
     foreach my $type ('requires', 'build_requires') {

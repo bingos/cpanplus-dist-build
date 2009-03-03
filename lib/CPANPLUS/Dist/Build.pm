@@ -284,10 +284,12 @@ sub prepare {
 
         msg( $prep_output, 0 );
 
-        $self->status->prereqs( $dist->_find_prereqs( verbose => $verbose, 
-                                                      dir => $dir, 
-                                                      perl => $perl,
-                                                      buildflags => $buildflags ) );
+        my $prereqs = $self->status->prereqs;
+
+        $prereqs ||= $dist->_find_prereqs( verbose => $verbose, 
+                                           dir => $dir, 
+                                           perl => $perl,
+                                           buildflags => $buildflags );
 
     }
     

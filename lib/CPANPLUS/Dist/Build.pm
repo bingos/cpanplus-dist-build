@@ -31,7 +31,7 @@ use Locale::Maketext::Simple    Class => 'CPANPLUS', Style => 'gettext';
 
 local $Params::Check::VERBOSE = 1;
 
-$VERSION = '0.13_01';
+$VERSION = '0.13_02';
 
 =pod
 
@@ -378,7 +378,7 @@ sub _find_prereqs {
 
     my $content;
 
-    if ( version->new( $Module::Build::VERSION ) >= $safe_ver ) {
+    if ( version->new( $Module::Build::VERSION ) >= $safe_ver and ! ON_WIN32 ) {
         # Use the new Build action 'prereq_data'
         
         unless ( scalar run(    command => [$perl, BUILD->($dir), 'prereq_data', $buildflags],

@@ -20,4 +20,5 @@ requires 'File::Spec'                => 0;
 clean_files 't/dummy-cpanplus t/dummy-perl/lib/perl5';
 # overwrite the CP::D::B that shipped in core
 installdirs ($] >= 5.009005 ? 'perl' : 'site');
+auto_set_repository;
 WriteAll();

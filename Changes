@@ -1,5 +1,11 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
+0.20 Tue Apr  7 17:01:47 BST 2009
+
+  - Made MI::Respository only necessary on the author-side
+    we should be installable on 5.6.* now. No other changes
+    so no need to update in core.
+    
 0.18 Mon Mar 30 10:03:21 BST 2009
 
   - Amendments for the new save_state in dev CPANPLUS.

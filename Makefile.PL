@@ -19,6 +19,12 @@ requires 'Module::Build'             => '0.32';
 requires 'File::Spec'                => 0;
 clean_files 't/dummy-cpanplus t/dummy-perl/lib/perl5';
 # overwrite the CP::D::B that shipped in core
-installdirs ($] >= 5.009005 ? 'perl' : 'site');
+#installdirs ($] >= 5.009005 ? 'perl' : 'site');
+if ( $] >= 5.009005 ) {
+  install_as_core;
+}
+else {
+  install_as_site;
+}
 eval "auto_set_repository()";
 WriteAll();

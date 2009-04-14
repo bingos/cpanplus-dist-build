@@ -1,5 +1,8 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
+0.22 Tue Apr 14 11:01:12 BST 2009
+  - Fix the installdirs in Makefile.PL
+
 0.20 Tue Apr  7 17:01:47 BST 2009
 
   - Made MI::Respository only necessary on the author-side

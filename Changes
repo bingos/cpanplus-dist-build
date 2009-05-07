@@ -1,5 +1,11 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
+0.26 Thu May  7 16:40:26 BST 2009
+  - Integrated the t/inc/conf.pl and dummy-CPAN/ structure from
+    CPANPLUS into the testsuite. This resolves the issue where 
+    CPAN indexes were fetched and built during the tests. 
+    Spotted by Steve Hay, fixed with help from Jos Boumans.
+
 0.24 Mon Apr 27 16:55:37 BST 2009
   - Removed CPANPLUS::inc from the code as CPANPLUS-0.86 does not 
     include this now.

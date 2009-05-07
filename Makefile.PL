@@ -6,6 +6,7 @@ version_from 'lib/CPANPLUS/Dist/Build.pm';
 abstract 'CPANPLUS plugin to install packages that use Build.PL';
 perl_version '5.006';
 license 'perl';
+auto_license holder => 'Jos Boumans, Ken Williams, Chris Williams and David Golden';
 build_requires 'Test::More'          => 0.47;
 requires 'Test::Harness'             => '3.16';
 requires 'CPANPLUS'                  => '0.84';

@@ -1,5 +1,6 @@
 Changes
 inc/Module/Install.pm
+inc/Module/Install/AutoLicense.pm
 inc/Module/Install/Base.pm
 inc/Module/Install/Can.pm
 inc/Module/Install/Fetch.pm
@@ -19,6 +20,9 @@ t/01_CPANPLUS-Dist-Build-Constants.t
 t/02_CPANPLUS-Dist-Build.t
 t/99_pod.t
 t/99_pod_coverage.t
+t/dummy-CPAN/authors/01mailrc.txt.gz
+t/dummy-CPAN/modules/02packages.details.txt.gz
+t/dummy-CPAN/modules/03modlist.data.gz
 t/dummy-perl/.hidden
 t/inc/conf.pl
 t/src/noxs/Foo-Bar-0.01.tar.gz

@@ -1,5 +1,10 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
+0.28 Fri May  8 10:58:42 BST 2009
+  - Add the CPANPLUS bin/ dir to $ENV{PATH} if we are running
+    under PERL_CORE. This fixes warnings during 'make test' in
+    the core. No need for other users to upgrade.
+
 0.26 Thu May  7 16:40:26 BST 2009
   - Integrated the t/inc/conf.pl and dummy-CPAN/ structure from
     CPANPLUS into the testsuite. This resolves the issue where 

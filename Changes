@@ -1,5 +1,9 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
+0.30 Mon May 18 16:23:14 BST 2009
+  - [RT #46176] Skip XS tests when perl compiled without dynamic
+    loading. Reported by Andy Dougherty
+
 0.28 Fri May  8 10:58:42 BST 2009
   - Add the CPANPLUS bin/ dir to $ENV{PATH} if we are running
     under PERL_CORE. This fixes warnings during 'make test' in

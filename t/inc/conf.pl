@@ -207,7 +207,6 @@ sub gimme_conf {
 ### clean these files if we're under perl core
 END { 
     if ( $ENV{PERL_CORE} ) {
-        close output_handle(); 1 while unlink output_file();
 
         _clean_test_dir( [
             gimme_conf->get_conf('base'),   

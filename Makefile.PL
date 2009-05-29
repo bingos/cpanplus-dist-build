@@ -28,4 +28,5 @@ else {
   install_as_site;
 }
 eval "auto_set_repository()";
+auto_provides;
 WriteAll();

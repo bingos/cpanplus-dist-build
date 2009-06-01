@@ -30,7 +30,7 @@ use Locale::Maketext::Simple    Class => 'CPANPLUS', Style => 'gettext';
 
 local $Params::Check::VERBOSE = 1;
 
-$VERSION = '0.30';
+$VERSION = '0.32';
 
 =pod
 
@@ -308,7 +308,7 @@ sub prepare {
         # done at a much higher level).
         my $prep_output;
 
-        my $env = 'ENV_CPANPLUS_IS_EXECUTING';
+        my $env = ENV_CPANPLUS_IS_EXECUTING;
         local $ENV{$env} = BUILD_PL->( $dir );
 
         unless ( scalar run(    command => [$perl, BUILD_PL->($dir), @buildflags],

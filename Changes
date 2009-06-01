@@ -1,5 +1,7 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
+0.34
+
 0.32 Mon Jun  1 21:43:52 BST 2009
   - Removed generation of .output files
   - Fixed the setting of PERL5_CPANPLUS_IS_EXECUTING env var in 

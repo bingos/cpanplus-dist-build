@@ -2,6 +2,9 @@ Revision history for Perl extension CPANPLUS::Dist::Build.
 
 0.32
   - Removed generation of .output files
+  - Fixed the setting of PERL5_CPANPLUS_IS_EXECUTING env var in 
+    prepare. Spotted by Matt Trout
+  - Added 'perlwrapper' to all perl calls. Spotted by Matt Trout.
 
 0.30 Mon May 18 16:23:14 BST 2009
   - [RT #46176] Skip XS tests when perl compiled without dynamic

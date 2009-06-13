@@ -1,6 +1,9 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
-0.34
+0.34 Sat Jun 13 09:50:24 BST 2009
+  - Fixed the 02packages.details.txt.gz file in our fake CPAN
+      CPANPLUS-0.87_01 now checks this file for sanity. Ours
+      was not sane >:) Spotted by the ever vigilant Vincent Pit.
 
 0.32 Mon Jun  1 21:43:52 BST 2009
   - Removed generation of .output files

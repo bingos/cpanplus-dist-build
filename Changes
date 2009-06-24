@@ -1,5 +1,9 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
+0.35_01 Wed Jun 24 09:57:28 BST 2009
+  - Fix to _find_prereqs() for VMS when running prereq_data
+    Build target, reported by Craig Berry.
+
 0.34 Sat Jun 13 09:50:24 BST 2009
   - Fixed the 02packages.details.txt.gz file in our fake CPAN
       CPANPLUS-0.87_01 now checks this file for sanity. Ours

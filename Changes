@@ -1,5 +1,9 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
+0.35_02 Sat Jun 27 09:35:55 BST 2009
+  - Don't use the perlwrapper on VMS, (Craig Berry)
+  - Skip env test on VMS
+
 0.35_01 Wed Jun 24 09:57:28 BST 2009
   - Fix to _find_prereqs() for VMS when running prereq_data
     Build target, reported by Craig Berry.

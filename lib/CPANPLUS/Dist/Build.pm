@@ -311,7 +311,7 @@ sub prepare {
         my $env = ENV_CPANPLUS_IS_EXECUTING;
         local $ENV{$env} = BUILD_PL->( $dir );
         my $run_perl    = $conf->get_program('perlwrapper');
-        my $cmd = [$perl, $run_perl, BUILD_PL->($dir), @buildflags]
+        my $cmd = [$perl, $run_perl, BUILD_PL->($dir), @buildflags];
 
         unless ( scalar run(    command => $cmd,
                                 buffer  => \$prep_output,

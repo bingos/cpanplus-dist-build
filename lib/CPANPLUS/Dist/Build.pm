@@ -30,7 +30,7 @@ use Locale::Maketext::Simple    Class => 'CPANPLUS', Style => 'gettext';
 
 local $Params::Check::VERBOSE = 1;
 
-$VERSION = '0.35_03';
+$VERSION = '0.36';
 
 =pod
 
@@ -813,7 +813,7 @@ terms as Perl itself.
 
 =cut
 
-1;
+qq[Putting the Module::Build into CPANPLUS];
 
 
 # Local variables:

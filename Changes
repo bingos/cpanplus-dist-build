@@ -1,5 +1,9 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
+0.36 Sat Jul  4 14:51:42 BST 2009
+  - Make install() honour the buildflags directive, 
+    absence spotted by Matt Trout
+
 0.35_03 Tue Jun 30 22:48:57 BST 2009
   - Switch to IPC::Cmd->can_capture_buffer wherever we 
     need to rely on what is captured ( VMS and MSWin32 

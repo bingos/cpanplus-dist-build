@@ -636,7 +636,8 @@ sub create {
 
             } 
             else {
-                msg( $test_output, 0 );
+                msg( loc( "MAKE TEST passed:\n%1", $test_output ), 0 );
+                #msg( $test_output, 0 );
                 $dist->status->test(1);
             }
         } 

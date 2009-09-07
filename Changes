@@ -1,5 +1,9 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
+0.40 Mon Sep  7 14:15:03 BST 2009
+  - Change the location of the CPANPLUS bin directory when
+    running under core (bingos)
+
 0.38 Mon Aug 24 13:59:11 BST 2009
   - Cosmetic change to the test output message so it
     matches CPANPLUS::Dist::MM (bingos)

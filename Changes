@@ -1,5 +1,9 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
+0.50 Thu Oct 28 23:02:19 BST 2010
+  - We clear the relevant env vars that effect Module::Build
+    during the 'install' test. local::lib and cpanm set these.
+
 0.48 Sun Sep  5 15:14:17 BST 2010
   - Explicitly set the location of cpanp-run-perl when under PERL_CORE
     in t/inc/conf.pl

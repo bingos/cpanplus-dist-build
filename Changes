@@ -1,5 +1,9 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
+0.54 Mon Feb 28 11:52:04 GMT 2011
+  - Only skip 'perl' as a prereq when CPANPLUS version is
+    less than 0.9102
+
 0.52 Fri Jan  7 22:23:03 GMT 2011
   - Apply blead patch from Peter Acklam
 

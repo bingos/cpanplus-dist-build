@@ -1,5 +1,8 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
+0.58 Sun Sep  4 20:42:48 BST 2011
+  - Added local::lib type behaviour detection to disable use of 'sudo'
+
 0.56 Tue Apr 19 14:51:07 BST 2011
   - Display failing tests only once to terminal.
 

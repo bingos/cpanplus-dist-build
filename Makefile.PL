@@ -27,6 +27,6 @@ if ( $] >= 5.009005 ) {
 else {
   install_as_site;
 }
-eval "auto_set_repository()";
+eval "githubmeta( 'github' )";
 auto_provides;
 WriteAll();

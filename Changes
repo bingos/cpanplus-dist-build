@@ -1,5 +1,9 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
+0.66 Tue Dec  4 23:05:53 GMT 2012
+  - Resolve an issue where Build.PL doesn't generate a
+    Build script
+
 0.64 Sat Oct 20 23:21:36 BST 2012
   - Update Module::Install, no functional changes.
 

@@ -1,5 +1,8 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
+0.68 Wed Dec  5 00:17:04 GMT 2012
+  - Revert change to wrapper command-line
+
 0.66 Tue Dec  4 23:05:53 GMT 2012
   - Resolve an issue where Build.PL doesn't generate a
     Build script

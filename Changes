@@ -1,5 +1,11 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
+0.70 Fri Jan 25 15:58:27 GMT 2013
+  - Add deprecation usage to warn if modules are loaded
+    from corelib. CPANPLUS::Dist::Build will be leaving
+    core with v5.20.0 and will still be available on
+    CPAN.
+
 0.68 Wed Dec  5 00:17:04 GMT 2012
   - Revert change to wrapper command-line
 

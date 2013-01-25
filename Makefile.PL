@@ -19,9 +19,10 @@ requires 'Module::Pluggable'         => '3.8';
 requires 'Module::Build'             => '0.32';
 requires 'File::Spec'                => 0;
 requires 'ExtUtils::Install'         => '1.42';
+requires 'if'                        => 0;
 clean_files 't/dummy-cpanplus t/dummy-perl/lib/perl5';
 # overwrite the CP::D::B that shipped in core
-if ( $] >= 5.009005 ) {
+if ( $] >= 5.009005 && $] < 5.012 ) {
   install_as_core;
 }
 else {

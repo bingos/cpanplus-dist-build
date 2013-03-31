@@ -28,6 +28,6 @@ if ( $] >= 5.009005 && $] < 5.012 ) {
 else {
   install_as_site;
 }
-eval "githubmeta( 'github' )";
+eval "githubmeta";
 auto_provides;
 WriteAll();

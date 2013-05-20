@@ -660,7 +660,7 @@ sub create {
             ) {
                 error( loc( "MAKE TEST failed:\n%1 ", $test_output ), ( $verbose ? 0 : 1 ) );
 
-                ### mark specifically *test* failure.. so we dont
+                ### mark specifically *test* failure.. so we don't
                 ### send success on force...
                 $test_fail++;
 

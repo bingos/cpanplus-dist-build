@@ -329,7 +329,7 @@ sub prepare {
             $fail++; last RUN;
         }
 
-        unless ( BUILD->( $dir ) ) {
+        unless ( -e BUILD->( $dir ) ) {
             error( loc( "Build.PL failed to generate a Build script: %1", $prep_output ) );
             if ( $conf->get_conf('cpantest') ) {
                $status->{stage} = 'prepare';

@@ -15,7 +15,6 @@ requires 'Params::Check'             => '0.26';
 requires 'IPC::Cmd'                  => '0.42';
 requires 'Module::Load'              => '0.16';
 requires 'Module::Load::Conditional' => '0.30';
-requires 'Module::Pluggable'         => '3.8';
 requires 'Module::Build'             => '0.32';
 requires 'File::Spec'                => 0;
 requires 'ExtUtils::Install'         => '1.42';

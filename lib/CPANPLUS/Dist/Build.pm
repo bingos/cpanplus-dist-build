@@ -350,7 +350,9 @@ sub prepare {
     }
 
     ### send out test report? ###
-    if( $fail and $conf->get_conf('cpantest') and not $prereq_fail ) {
+    ### there is no way to accurately know if it is a PASS/FAIL/ETC
+    ### CPANPLUS::Dist::MM doesn't bother why are we?
+    if( 0 and $fail and $conf->get_conf('cpantest') and not $prereq_fail ) {
            $cb->_send_report(
             module  => $self,
             failed  => $fail,

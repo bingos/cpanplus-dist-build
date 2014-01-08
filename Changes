@@ -1,5 +1,8 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
+0.76 Wed Jan  8 08:46:22 GMT 2014
+  - Don't send test reports during prepare() phase
+
 0.74 Tue Aug  6 20:53:04 BST 2013
   - Remove Module::Pluggable prereq
 

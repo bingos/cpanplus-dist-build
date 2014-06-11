@@ -32,7 +32,7 @@ use Locale::Maketext::Simple    Class => 'CPANPLUS', Style => 'gettext';
 
 local $Params::Check::VERBOSE = 1;
 
-$VERSION = '0.76';
+$VERSION = '0.78';
 
 =pod
 
@@ -656,6 +656,7 @@ sub create {
             else {
                 $cmd     = [$perl, @run_perl, BUILD->($dir), "test", @buildflags];
             }
+            local $ENV{PERL_INSTALL_QUIET};
             unless ( scalar run(    command => $cmd,
                                     buffer  => \$test_output,
                                     verbose => $verbose )

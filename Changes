@@ -1,5 +1,8 @@
 Revision history for Perl extension CPANPLUS::Dist::Build.
 
+0.78 Wed Jun 11 18:06:59 BST 2014
+  - Shield tests from PERL_INSTALL_QUIET env var
+
 0.76 Wed Jan  8 08:46:22 GMT 2014
   - Don't send test reports during prepare() phase
 

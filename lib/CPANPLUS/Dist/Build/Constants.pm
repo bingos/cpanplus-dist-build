@@ -11,7 +11,7 @@ BEGIN {
     require Exporter;
     use vars    qw[$VERSION @ISA @EXPORT];
 
-    $VERSION    = '0.78';
+    $VERSION    = '0.80';
     @ISA        = qw[Exporter];
     @EXPORT     = qw[ BUILD_DIR BUILD CPDB_PERL_WRAPPER];
 }

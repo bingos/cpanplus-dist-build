@@ -32,7 +32,7 @@ use Locale::Maketext::Simple    Class => 'CPANPLUS', Style => 'gettext';
 
 local $Params::Check::VERBOSE = 1;
 
-$VERSION = '0.78';
+$VERSION = '0.80';
 
 =pod
 
@@ -441,7 +441,7 @@ sub _find_prereqs {
       return unless $content;
       my $bphash = eval $content;
       return unless $bphash and ref $bphash eq 'HASH';
-      foreach my $type ('requires', 'build_requires') {
+      foreach my $type ('requires', 'build_requires', 'test_requires') {
         next unless $bphash->{$type} and ref $bphash->{$type} eq 'HASH';
         $prereqs->{$_} = $bphash->{$type}->{$_} for keys %{ $bphash->{$type} };
       }

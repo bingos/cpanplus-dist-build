@@ -274,6 +274,10 @@ sub prepare {
     my $fail; my $prereq_fail;
     my $status = { };
     RUN: {
+
+        local $ENV{PERL_USE_UNSAFE_INC} = 1
+          unless exists $ENV{PERL_USE_UNSAFE_INC};
+
         # 0.85_01
         ### we resolve 'configure requires' here, so we can run the 'perl
         ### Makefile.PL' command
@@ -590,6 +594,9 @@ sub create {
     my $status = { };
     RUN: {
 
+        local $ENV{PERL_USE_UNSAFE_INC} = 1
+          unless exists $ENV{PERL_USE_UNSAFE_INC};
+
         my @run_perl    = ( '-e', CPDB_PERL_WRAPPER );
 
         ### this will set the directory back to the start
@@ -778,6 +785,9 @@ sub install {
     my $fail;
     my @buildflags = $dist->_buildflags_as_list( $buildflags );
     my @run_perl    = ( '-e', CPDB_PERL_WRAPPER );
+
+    local $ENV{PERL_USE_UNSAFE_INC} = 1
+      unless exists $ENV{PERL_USE_UNSAFE_INC};
 
     ### hmm, how is this going to deal with sudo?
     ### for now, check effective uid, if it's not root,

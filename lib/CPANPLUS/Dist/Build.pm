@@ -1,10 +1,12 @@
 package CPANPLUS::Dist::Build;
 
+#ABSTRACT: CPANPLUS plugin to install packages that use Build.PL
+
 use if $] > 5.017, 'deprecate';
 
 use strict;
 use warnings;
-use vars    qw[@ISA $STATUS $VERSION];
+use vars    qw[@ISA $STATUS];
 @ISA =      qw[CPANPLUS::Dist];
 
 use CPANPLUS::Internals::Constants;
@@ -32,13 +34,7 @@ use Locale::Maketext::Simple    Class => 'CPANPLUS', Style => 'gettext';
 
 local $Params::Check::VERBOSE = 1;
 
-$VERSION = '0.82';
-
 =pod
-
-=head1 NAME
-
-CPANPLUS::Dist::Build - CPANPLUS plugin to install packages that use Build.PL
 
 =head1 SYNOPSIS
 
@@ -861,22 +857,12 @@ sub _buildflags_as_list {
     return Module::Build->split_like_shell($flags);
 }
 
-=head1 AUTHOR
+=head1 PROMINENCE
 
 Originally by Jos Boumans E<lt>kane@cpan.orgE<gt>.  Brought to working
 condition by Ken Williams E<lt>kwilliams@cpan.orgE<gt>.
 
 Other hackery and currently maintained by Chris C<BinGOs> Williams ( no relation ). E<lt>bingos@cpan.orgE<gt>.
-
-=head1 LICENSE
-
-The CPAN++ interface (of which this module is a part of) is
-copyright (c) 2001, 2002, 2003, 2004, 2005 Jos Boumans E<lt>kane@cpan.orgE<gt>.
-All rights reserved.
-
-This library is free software;
-you may redistribute and/or modify it under the same
-terms as Perl itself.
 
 =cut
 

@@ -1,6 +1,6 @@
 ### make sure we can find our conf.pl file
-BEGIN { 
-    use FindBin; 
+BEGIN {
+    use FindBin;
     require "$FindBin::Bin/inc/conf.pl";
 }
 
@@ -67,24 +67,24 @@ my $Mod = CPANPLUS::Module::Fake->new(
         $Conf->set_program( make => $make );
     }
 }
-    
+
 
                 # path, cc needed?
 my %Map     = ( noxs    => 0,
-                xs      => 1 
-            );        
+                xs      => 1
+            );
 
 
 ### Disable certain possible settings, so we dont accidentally
 ### touch anything outside our sandbox
-{   
+{
     ### set buildflags to install in our dummy perl dir
     $Conf->set_conf( buildflags => "install_base=$Lib" );
-    
+
     ### don't start sending test reports now... ###
     $CB->_callbacks->send_test_report( sub { 0 } );
     $Conf->set_conf( cpantest => 0 );
-    
+
     ### we dont need sudo -- we're installing in our own sandbox now
     $Conf->set_program( sudo => undef );
 }
@@ -97,13 +97,13 @@ ok( $Class->format_available,   "Format is available" );
 while( my($path,$need_cc) = each %Map ) {
 
     my $mod = $Mod->clone;
-    ok( $mod,                   "Module object created for '$path'" );        
-                
+    ok( $mod,                   "Module object created for '$path'" );
+
     ### set the fetch location -- it's local
     {   my $where = File::Spec->rel2abs(
                             File::Spec->catfile( $Src, $path, $mod->package )
                         );
-                        
+
         $mod->status->fetch( $where );
 
         ok( -e $where,          "   Tarball '$where' exists" );
@@ -111,7 +111,7 @@ while( my($path,$need_cc) = each %Map ) {
 
     ok( $mod->prepare,          "   Preparing module" );
 
-    ok( $mod->status->dist_cpan,    
+    ok( $mod->status->dist_cpan,
                                 "   Dist registered as status" );
 
     isa_ok( $mod->status->dist_cpan, $Class );
@@ -122,7 +122,7 @@ while( my($path,$need_cc) = each %Map ) {
                                 "   Distdir status registered properly" );
 
 
-    is( $mod->status->installer_type, INSTALLER_BUILD, 
+    is( $mod->status->installer_type, INSTALLER_BUILD,
                                 "   Proper installer type found" );
 
 
@@ -133,11 +133,13 @@ while( my($path,$need_cc) = each %Map ) {
         skip("The CC compiler listed in Config.pm is not available " .
              "-- skipping compile tests", 5) if $need_cc && !$Have_CC;
         skip("Module::Build is not compiled with C support ".
-             "-- skipping compile tests", 5) 
-             unless eval { require Module::Build::ConfigData;
-             Module::Build::ConfigData->feature('C_support') };
+             "-- skipping compile tests", 5)
+             unless $Module::Build::VERSION >= 0.36 ||
+             eval { require Module::Build::ConfigData;
+                    Module::Build::ConfigData->feature('C_support') };
 
         ok( $mod->create( ),    "Creating module" );
+
         ok( $mod->status->dist_cpan->status->created,
                                 "   Created status registered" );
 
@@ -153,12 +155,12 @@ while( my($path,$need_cc) = each %Map ) {
             ### otherwise, cpanplus thinks the module's already installed
             ### since the blib is already in @INC
             $CB->_flush( list => [qw|lib|] );
-        
+
             ### force the install, make sure the Dist::Build->install()
             ### sub gets called
             ok( $mod->install( force => 1 ),
-                                "Installing module" ); 
-            ok( $mod->status->installed,    
+                                "Installing module" );
+            ok( $mod->status->installed,
                                 "   Status says module installed" );
         }
 
@@ -170,7 +172,7 @@ while( my($path,$need_cc) = each %Map ) {
             # The installation directory actually needs to be in @INC
             # in order to test uninstallation
             {   my $libdir = File::Spec->catdir($Lib, 'lib', 'perl5');
-                
+
                 # lib.pm is documented to require unix-style paths
                 $libdir = VMS::Filespec::unixify($libdir) if $^O eq 'VMS';
 
@@ -182,14 +184,14 @@ while( my($path,$need_cc) = each %Map ) {
             # them out with our own subs here.
             my $packlist = find_module($mod->name . '::.packlist');
             ok $packlist, "Found packlist";
-            
+
             my $p = ExtUtils::Packlist->new($packlist);
             ok keys(%$p) > 0, "Packlist contains entries";
 
             local *CPANPLUS::Module::installed_version = sub {1};
             local *CPANPLUS::Module::packlist = sub { [$p] };
             local *ExtUtils::Installed::files = sub { keys %$p };
-            
+
             ok( $mod->uninstall,"Uninstalling module" );
         }
     }
@@ -204,13 +206,13 @@ SKIP: {   ### use print() not die() -- we're redirecting STDERR in tests!
     skip("Can't test ENV{$env} -- no buffers available")
       unless IPC::Cmd->can_capture_buffer;
     my $clone   = $Mod->clone;
-    
+
     ok( $clone,                 'Testing ENV settings $dist->prepare' );
-    
+
     $clone->status->fetch( File::Spec->catfile($Src, 'noxs', $clone->package) );
     ok( $clone->extract,        '   Files extracted' );
-    
-    ### write our own Build.PL file    
+
+    ### write our own Build.PL file
     my $build_pl = BUILD_PL->( $clone->status->extract );
     {   my $fh   = OPEN_FILE->( $build_pl, '>' );
         print $fh "die qq[ENV=\$ENV{$env}\n];";
@@ -218,17 +220,17 @@ SKIP: {   ### use print() not die() -- we're redirecting STDERR in tests!
     }
     ok( -e $build_pl,           "   File exists" );
 
-    ### clear errors    
+    ### clear errors
     CPANPLUS::Error->flush;
 
-    ### since we're die'ing in the Build.PL, localize 
+    ### since we're die'ing in the Build.PL, localize
     ### $CPANPLUS::Error::ERROR_FH and redirect to devnull
-    ### so we dont spam the result through the test 
+    ### so we dont spam the result through the test
     ### as this is expected behaviour after all.
     my $rv = do {
         local *CPANPLUS::Error::ERROR_FH;
         open $CPANPLUS::Error::ERROR_FH, ">", File::Spec->devnull;
-        $clone->prepare( force => 1 ) 
+        $clone->prepare( force => 1 )
     };
     ok( !$rv,                   '   $mod->prepare failed' );
 
@@ -238,13 +240,13 @@ SKIP: {   ### use print() not die() -- we're redirecting STDERR in tests!
 
     ### and the ENV var should no longer be set now
     ok( !$ENV{$env},            "   ENV var now unset" );
-}    
+}
 
 
 sub find_module {
   my $module = shift;
 
-  ### Don't add the .pm yet, in case it's a packlist or something 
+  ### Don't add the .pm yet, in case it's a packlist or something
   ### like ExtUtils::xsubpp.
   my $file = File::Spec->catfile( split m/::/, $module );
   my $candidate;

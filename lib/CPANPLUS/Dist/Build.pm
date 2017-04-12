@@ -314,7 +314,7 @@ sub prepare {
 
         my $env = ENV_CPANPLUS_IS_EXECUTING;
         local $ENV{$env} = BUILD_PL->( $dir );
-        my @run_perl    = ( '-e', CPDB_PERL_WRAPPER );
+        my @run_perl    = $dist->_perlrun();
         my $cmd = [$perl, @run_perl, BUILD_PL->($dir), @buildflags];
 
         unless ( scalar run(    command => $cmd,
@@ -409,7 +409,7 @@ sub _find_prereqs {
           my @buildflags = $dist->_buildflags_as_list( $buildflags );
 
           # Use the new Build action 'prereq_data'
-          my @run_perl    = ( '-e', CPDB_PERL_WRAPPER );
+          my @run_perl    = $dist->_perlrun();
 
           unless ( scalar run(    command => [$perl, @run_perl, BUILD->($dir), 'prereq_data', @buildflags],
                                 buffer  => \$content,
@@ -593,7 +593,7 @@ sub create {
         local $ENV{PERL_USE_UNSAFE_INC} = 1
           unless exists $ENV{PERL_USE_UNSAFE_INC};
 
-        my @run_perl    = ( '-e', CPDB_PERL_WRAPPER );
+        my @run_perl    = $dist->_perlrun();
 
         ### this will set the directory back to the start
         ### dir, so we must chdir /again/
@@ -780,7 +780,7 @@ sub install {
 
     my $fail;
     my @buildflags = $dist->_buildflags_as_list( $buildflags );
-    my @run_perl    = ( '-e', CPDB_PERL_WRAPPER );
+    my @run_perl    = $dist->_perlrun();
 
     local $ENV{PERL_USE_UNSAFE_INC} = 1
       unless exists $ENV{PERL_USE_UNSAFE_INC};
@@ -855,6 +855,20 @@ sub _buildflags_as_list {
     my $flags   = shift or return;
 
     return Module::Build->split_like_shell($flags);
+}
+
+{
+   my $afe_ver = version->new($CPANPLUS::Internals::VERSION) >= version->new("0.9166");
+
+   sub _perlrun {
+      my $self    = shift;
+      if ( $afe_ver ) {
+        return ( '-MCPANPLUS::Internals::Utils::Autoflush' );
+      }
+      else {
+        return ( '-e', CPDB_PERL_WRAPPER );
+      }
+   }
 }
 
 =head1 PROMINENCE

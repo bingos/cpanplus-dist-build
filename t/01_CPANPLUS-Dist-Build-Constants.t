@@ -1,6 +1,6 @@
 ### make sure we can find our conf.pl file
-BEGIN { 
-    use FindBin; 
+BEGIN {
+    use FindBin;
     require "$FindBin::Bin/inc/conf.pl";
 }
 
@@ -13,7 +13,7 @@ BEGIN {
     use File::Spec;
     require lib;
     for (qw[../lib inc]) {
-        my $l = 'lib'; $l->import(File::Spec->rel2abs($_)) 
+        my $l = 'lib'; $l->import(File::Spec->rel2abs($_))
     }
 }
 
@@ -27,7 +27,7 @@ use_ok( $Class );
 
 for my $name ( qw[BUILD BUILD_DIR] ) {
 
-    my $sub = $Class->can( $name );   
+    my $sub = $Class->can( $name );
     ok( $sub,                   "$Class can $name" );
     ok( $sub->(),               "   $name called OK" );
-}    
+}

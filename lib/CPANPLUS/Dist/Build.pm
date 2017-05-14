@@ -309,7 +309,11 @@ sub prepare {
         # done at a much higher level).
         my $prep_output;
 
-        local $ENV{PERL_USE_UNSAFE_INC} = 1
+        my $metadata = $dist->status->_metadata;
+        my $x_use_unsafe_inc = ( defined $metadata && exists $metadata->{x_use_unsafe_inc} ? $metadata->{x_use_unsafe_inc} : undef );
+        $x_use_unsafe_inc = 1 unless defined $x_use_unsafe_inc;
+
+        local $ENV{PERL_USE_UNSAFE_INC} = $x_use_unsafe_inc
           unless exists $ENV{PERL_USE_UNSAFE_INC};
 
         my $env = ENV_CPANPLUS_IS_EXECUTING;
@@ -590,9 +594,6 @@ sub create {
     my $status = { };
     RUN: {
 
-        local $ENV{PERL_USE_UNSAFE_INC} = 1
-          unless exists $ENV{PERL_USE_UNSAFE_INC};
-
         my @run_perl    = $dist->_perlrun();
 
         ### this will set the directory back to the start
@@ -605,6 +606,13 @@ sub create {
                         target          => $prereq_target,
                         prereq_build    => $prereq_build,
                     );
+
+        my $metadata = $dist->status->_metadata;
+        my $x_use_unsafe_inc = ( defined $metadata && exists $metadata->{x_use_unsafe_inc} ? $metadata->{x_use_unsafe_inc} : undef );
+        $x_use_unsafe_inc = 1 unless defined $x_use_unsafe_inc;
+
+        local $ENV{PERL_USE_UNSAFE_INC} = $x_use_unsafe_inc
+          unless exists $ENV{PERL_USE_UNSAFE_INC};
 
         unless( $cb->_chdir( dir => $dir ) ) {
             error( loc( "Could not chdir to build directory '%1'", $dir ) );
@@ -782,7 +790,11 @@ sub install {
     my @buildflags = $dist->_buildflags_as_list( $buildflags );
     my @run_perl    = $dist->_perlrun();
 
-    local $ENV{PERL_USE_UNSAFE_INC} = 1
+    my $metadata = $dist->status->_metadata;
+    my $x_use_unsafe_inc = ( defined $metadata && exists $metadata->{x_use_unsafe_inc} ? $metadata->{x_use_unsafe_inc} : undef );
+    $x_use_unsafe_inc = 1 unless defined $x_use_unsafe_inc;
+
+    local $ENV{PERL_USE_UNSAFE_INC} = $x_use_unsafe_inc
       unless exists $ENV{PERL_USE_UNSAFE_INC};
 
     ### hmm, how is this going to deal with sudo?

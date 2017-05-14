@@ -169,7 +169,7 @@ sub init {
 
     $status->mk_accessors(qw[build_pl build test created installed uninstalled
                              _create_args _install_args _prepare_args
-                             _mb_object _buildflags
+                             _mb_object _buildflags _metadata
                             ]);
 
     ### just in case 'format_available' didn't get called
@@ -271,9 +271,6 @@ sub prepare {
     my $status = { };
     RUN: {
 
-        local $ENV{PERL_USE_UNSAFE_INC} = 1
-          unless exists $ENV{PERL_USE_UNSAFE_INC};
-
         # 0.85_01
         ### we resolve 'configure requires' here, so we can run the 'perl
         ### Makefile.PL' command
@@ -311,6 +308,9 @@ sub prepare {
         # Wrap the exception that may be thrown here (should likely be
         # done at a much higher level).
         my $prep_output;
+
+        local $ENV{PERL_USE_UNSAFE_INC} = 1
+          unless exists $ENV{PERL_USE_UNSAFE_INC};
 
         my $env = ENV_CPANPLUS_IS_EXECUTING;
         local $ENV{$env} = BUILD_PL->( $dir );
